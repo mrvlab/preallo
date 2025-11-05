@@ -34,6 +34,9 @@
     "uuid": "^9.0.1",
     "yup": "^1.0.2"
   },
+  "engines": {
+    "node": ">=22.x"
+  },
   "devDependencies": {
     "@babel/core": "^7.19.3",
     "@babel/eslint-parser": "^7.19.1",

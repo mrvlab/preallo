@@ -70,9 +70,19 @@ const Month = () => {
     if (activeFilter === 'all') {
       return currentMonthExpenses;
     }
-    return currentMonthExpenses.filter(
-      (expense) => expense.status === activeFilter
-    );
+    // Status
+    if (statusList.includes(activeFilter)) {
+      return currentMonthExpenses.filter(
+        (expense) => expense.status === activeFilter
+      );
+    }
+    // Category
+    if (categoryList.includes(activeFilter)) {
+      return currentMonthExpenses.filter(
+        (expense) => expense.category === activeFilter
+      );
+    }
+    return currentMonthExpenses;
   }, [currentMonthExpenses, activeFilter]);
 
   // Generate status filters
@@ -95,6 +105,9 @@ const Month = () => {
     formState: { errors },
   } = useForm<IModalForm>({
     resolver: yupResolver(IAddExpenseModalFormYupSchema),
+    defaultValues: {
+      selectedThree: 'Pending',
+    },
   });
 
   const {

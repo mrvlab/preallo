@@ -40,6 +40,11 @@ const AddExpense = ({
       id: filter.id,
       label: filter.label,
     })),
+    ...(categoryList || []).map((category) => ({
+      activated: activeFilter === category,
+      id: category,
+      label: category,
+    })),
   ];
 
   return (

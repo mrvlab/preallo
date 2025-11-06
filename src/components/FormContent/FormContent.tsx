@@ -412,7 +412,7 @@ export const FormContent = ({
                 <Controller
                   name='selectedThree'
                   control={control}
-                  defaultValue={defaultStatus}
+                  defaultValue={defaultStatus || 'Pending'}
                   render={({ field }) => (
                     <TextField
                       {...field}
@@ -443,7 +443,7 @@ export const FormContent = ({
                     errors?.selectedThree ? errors.selectedThree?.message : ''
                   }
                   label={selectLabelThree}
-                  defaultValue={defaultStatus}
+                  defaultValue={defaultStatus || 'Pending'}
                   {...(register
                     ? register('selectedThree')
                     : { name: 'selectedThree' })}

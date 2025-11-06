@@ -8,6 +8,7 @@ import { ISubscriptions } from '@/model/ISubscriptions';
 import { settingsTabBarList } from '@/utils/functions/settingsTabBarList';
 import Dialog from '@mui/material/Dialog';
 import FormContent from '../../Month/FormContent';
+import EditExpense from '../../Month/EditExpense';
 import SettingsExpenseDisplay from '@/components/Expense/SettingsExpenseDisplay';
 import { styled } from '@mui/material/styles';
 
@@ -17,12 +18,21 @@ const StyledTotalDisplay = styled(TotalDisplay)(({ theme }) => ({
 
 const Mobile = ({
   open,
+  editOpen,
+  selectedExpense,
   handleOpen,
   handleClose,
+  handleEditOpen,
+  handleEditClose,
   handleSubmit,
+  editHandleSubmit,
   register,
+  editRegister,
+  editControl,
   errors,
+  editErrors,
   submitFormContentHandler,
+  submitEditFormContentHandler,
   categoryList,
   purposeList,
   statusList,
@@ -62,9 +72,31 @@ const Mobile = ({
             />
           </form>
         </Dialog>
+
+        <EditExpense
+          open={editOpen}
+          handleClose={handleEditClose}
+          handleSubmit={editHandleSubmit}
+          register={editRegister}
+          errors={editErrors}
+          submitFormContentHandler={submitEditFormContentHandler}
+          categoryList={categoryList}
+          purposeList={purposeList}
+          statusList={statusList}
+          expenseUuid={selectedExpense?.uuid || ''}
+          defaultAmount={selectedExpense?.amount}
+          defaultExpense={selectedExpense?.expense}
+          defaultCategory={selectedExpense?.category}
+          defaultPurpose={selectedExpense?.purpose}
+          defaultStatus={selectedExpense?.status}
+          control={editControl}
+        />
       </div>
 
-      <SettingsExpenseDisplay expenses={subscriptions} />
+      <SettingsExpenseDisplay
+        expenses={subscriptions}
+        onExpenseClick={handleEditOpen}
+      />
     </AppContainer>
   );
 };

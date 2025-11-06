@@ -3,9 +3,12 @@ import { IExpenses as ExpenseList } from '@/model/IExpenses';
 import { NoContentContainer } from '@/pages';
 import { Typography, styled } from '@mui/material';
 import React from 'react';
+import { IExpense } from '@/model/IExpenses';
 
 export type IExpenses = {
   expenses: ExpenseList;
+  // eslint-disable-next-line no-unused-vars
+  onExpenseClick?: (expense: IExpense) => void;
 };
 
 const StyledSettingsExpenseDisplay = styled('div')(({ theme }) => ({
@@ -58,7 +61,7 @@ const Scroll = styled('div')(({ theme }) => ({
   },
 }));
 
-const SettingsExpenseDisplay = ({ expenses }: IExpenses) => {
+const SettingsExpenseDisplay = ({ expenses, onExpenseClick }: IExpenses) => {
   return (
     <StyledSettingsExpenseDisplay>
       <Scroll>
@@ -76,6 +79,7 @@ const SettingsExpenseDisplay = ({ expenses }: IExpenses) => {
               fullWidth
               stripped
               bgColor='transparent'
+              onClick={() => onExpenseClick?.(expense)}
             />
           ))
         ) : (

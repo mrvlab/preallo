@@ -21,6 +21,7 @@ import { IRecurring } from '@/model/IRecurring';
 import { TotalDisplay } from '@/components/TotalDisplay/TotalDisplay';
 import { AddRow } from '@/components/AddRow/AddRow';
 import FormContent from '../../Month/FormContent';
+import EditExpense from '../../Month/EditExpense';
 import { StatusBadge } from '@/components/StatusBadge/StatusBadge';
 import { NoContentContainer } from '@/pages';
 
@@ -53,12 +54,21 @@ const TableWrapper = styled('div')(({ theme }) => ({
 
 const Desktop = ({
   open,
+  editOpen,
+  selectedExpense,
   handleOpen,
   handleClose,
+  handleEditOpen,
+  handleEditClose,
   handleSubmit,
+  editHandleSubmit,
   register,
+  editRegister,
+  editControl,
   errors,
+  editErrors,
   submitFormContentHandler,
+  submitEditFormContentHandler,
   categoryList,
   purposeList,
   statusList,
@@ -132,6 +142,25 @@ const Desktop = ({
                     />
                   </form>
                 </Dialog>
+
+                <EditExpense
+                  open={editOpen}
+                  handleClose={handleEditClose}
+                  handleSubmit={editHandleSubmit}
+                  register={editRegister}
+                  errors={editErrors}
+                  submitFormContentHandler={submitEditFormContentHandler}
+                  categoryList={categoryList}
+                  purposeList={purposeList}
+                  statusList={statusList}
+                  expenseUuid={selectedExpense?.uuid || ''}
+                  defaultAmount={selectedExpense?.amount}
+                  defaultExpense={selectedExpense?.expense}
+                  defaultCategory={selectedExpense?.category}
+                  defaultPurpose={selectedExpense?.purpose}
+                  defaultStatus={selectedExpense?.status}
+                  control={editControl}
+                />
               </div>
 
               <TableWrapper>
@@ -151,9 +180,14 @@ const Desktop = ({
                         {recurringExpenses.map((expense) => (
                           <TableRow
                             key={expense.uuid}
+                            onClick={() => handleEditOpen(expense)}
                             sx={{
                               '&:last-child td, &:last-child th': {
                                 border: 0,
+                              },
+                              cursor: 'pointer',
+                              '&:hover': {
+                                backgroundColor: 'rgba(0, 0, 0, 0.04)',
                               },
                             }}
                           >

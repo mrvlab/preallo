@@ -39,9 +39,11 @@ export default function OverviewPage() {
             <div className="contents lg:flex lg:flex-col lg:gap-6">
               <HeroCard
                 monthKey={key}
-                free={summary.free}
+                // Imported months are finished: what is left is salary minus everything spent,
+                // not salary minus fixed costs as while planning.
+                free={summary.fromHistory ? summary.left : summary.free}
                 income={summary.income}
-                reserved={summary.reserved}
+                reserved={summary.fromHistory ? summary.income - summary.left : summary.reserved}
                 missingCount={summary.missing}
                 paid={summary.paid}
                 payable={summary.payable}

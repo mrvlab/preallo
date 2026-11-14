@@ -165,7 +165,7 @@ export function FileDrop() {
           Drop one or more CSV or XLSX files here
         </p>
         <p className="text-xs text-[var(--muted-foreground)]">
-          XLSX workbooks read only sheets named like OCT26. CSV files are treated as a single month.
+          Workbooks import every month tab (Januari, Feb 24, OCT26). Template tabs are skipped. A CSV counts as one month.
         </p>
         <button
           disabled={busy}

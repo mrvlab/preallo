@@ -89,7 +89,7 @@ export function HeroCard({ monthKey, free, income, reserved, missingCount, paid,
           <Value underline>{krw(income)}</Value>
         </button>
         <div className="min-w-0">
-          <Label>Reserved</Label>
+          <Label>{past ? 'Spent' : 'Reserved'}</Label>
           <Value>{krw(reserved)}</Value>
         </div>
         {missingCount > 0 ? (

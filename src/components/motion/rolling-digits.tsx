@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 
 type Props = {
   value: string
@@ -8,21 +8,19 @@ type Props = {
 }
 
 export function RollingDigits({ value, className }: Props) {
-  const [playing, setPlaying] = useState(false)
+  // Every new value replays the load animation: snap each column to 0 with no transition,
+  // then two frames later roll it up to its digit with the left-to-right stagger.
   const prefersReduced = usePrefersReducedMotion()
+  const [played, setPlayed] = useState<string | null>(null)
+  const playing = prefersReduced || played === value
   const chars = value.split('')
-  const timer = useRef<number | null>(null)
 
   useEffect(() => {
-    if (prefersReduced) {
-      setPlaying(true)
-      return
-    }
-    setPlaying(false)
-    timer.current = window.setTimeout(() => setPlaying(true), 20)
-    return () => {
-      if (timer.current) window.clearTimeout(timer.current)
-    }
+    if (prefersReduced) return
+    let raf = requestAnimationFrame(() => {
+      raf = requestAnimationFrame(() => setPlayed(value))
+    })
+    return () => cancelAnimationFrame(raf)
   }, [value, prefersReduced])
 
   return (
@@ -32,10 +30,11 @@ export function RollingDigits({ value, className }: Props) {
     >
       {chars.map((c, i) => (
         <Digit
-          key={`${i}-${c}`}
+          key={i}
           char={c}
           delay={prefersReduced ? 0 : i * 28}
           animate={playing}
+          smooth={playing && !prefersReduced}
         />
       ))}
     </span>
@@ -46,10 +45,12 @@ function Digit({
   char,
   delay,
   animate,
+  smooth,
 }: {
   char: string
   delay: number
   animate: boolean
+  smooth: boolean
 }) {
   if (!/\d/.test(char)) {
     return <span>{char}</span>
@@ -70,7 +71,7 @@ function Digit({
         style={{
           display: 'block',
           transform: `translateY(${translate}%)`,
-          transition: `transform 900ms cubic-bezier(.2,.8,.2,1) ${delay}ms`,
+          transition: smooth ? `transform 900ms cubic-bezier(.2,.8,.2,1) ${delay}ms` : 'none',
         }}
       >
         {Array.from({ length: 10 }, (_, i) => (
@@ -84,13 +85,13 @@ function Digit({
 }
 
 function usePrefersReducedMotion() {
-  const [reduced, setReduced] = useState(false)
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    setReduced(mq.matches)
-    const handler = (e: MediaQueryListEvent) => setReduced(e.matches)
-    mq.addEventListener('change', handler)
-    return () => mq.removeEventListener('change', handler)
-  }, [])
-  return reduced
+  return useSyncExternalStore(
+    (onChange) => {
+      const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+      mq.addEventListener('change', onChange)
+      return () => mq.removeEventListener('change', onChange)
+    },
+    () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    () => false,
+  )
 }

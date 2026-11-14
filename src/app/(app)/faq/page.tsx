@@ -269,7 +269,7 @@ export default function FaqPage() {
         </div>
       </header>
 
-      <div className="grid items-start gap-x-5 gap-y-8 lg:grid-cols-[672fr_486fr]">
+      <div className="grid items-start gap-x-5 gap-y-8 @min-[60rem]/main:grid-cols-[672fr_486fr]">
         <section aria-labelledby="how">
           <h2 id="how" className="mb-3 text-xl font-extrabold tracking-[-0.02em] text-[var(--text)]">
             How it works

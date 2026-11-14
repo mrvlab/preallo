@@ -35,8 +35,8 @@ export default function OverviewPage() {
             No budget for this month yet. Use + to start it.
           </p>
         ) : (
-          <div className="grid gap-6 lg:grid-cols-[672fr_486fr]">
-            <div className="contents lg:flex lg:flex-col lg:gap-6">
+          <div className="grid gap-6 @min-[60rem]/main:grid-cols-[672fr_486fr]">
+            <div className="contents @min-[60rem]/main:flex @min-[60rem]/main:flex-col @min-[60rem]/main:gap-6">
               <HeroCard
                 monthKey={key}
                 // Imported months are finished: what is left is salary minus everything spent,
@@ -48,7 +48,7 @@ export default function OverviewPage() {
                 paid={summary.paid}
                 payable={summary.payable}
               />
-              <div className="order-3 flex flex-col gap-6 lg:order-none">
+              <div className="order-3 flex flex-col gap-6 @min-[60rem]/main:order-none">
                 {summary.fromHistory && summary.unreviewed > 0 && (
                   <a
                     href="/import"
@@ -69,11 +69,11 @@ export default function OverviewPage() {
                 ))}
               </div>
             </div>
-            <div className="contents lg:flex lg:flex-col lg:gap-6">
-              <div className="order-2 lg:order-none">
+            <div className="contents @min-[60rem]/main:flex @min-[60rem]/main:flex-col @min-[60rem]/main:gap-6">
+              <div className="order-2 @min-[60rem]/main:order-none">
                 <GoalsRingCard pct={summary.pct} goals={summary.goals} />
               </div>
-              <div className="order-4 lg:order-none">
+              <div className="order-4 @min-[60rem]/main:order-none">
                 <ComingUp items={items} monthKey={key} />
               </div>
             </div>

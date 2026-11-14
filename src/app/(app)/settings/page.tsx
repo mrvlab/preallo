@@ -44,7 +44,7 @@ export default function SettingsPage() {
       ) : !me || !summary ? (
         <p className="text-sm text-[var(--muted-foreground)]">Setting up your account.</p>
       ) : (
-        <div className="grid items-start gap-5 lg:grid-cols-[672fr_486fr]">
+        <div className="grid items-start gap-5 @min-[60rem]/main:grid-cols-[672fr_486fr]">
           <div className="flex flex-col gap-5">
             <SettingCard
               onClick={openGoals}
@@ -334,7 +334,7 @@ function ResetCard({ monthKey }: { monthKey: string }) {
 
 function SettingsSkeleton() {
   return (
-    <div aria-busy="true" aria-label="Loading settings" className="grid items-start gap-5 lg:grid-cols-[672fr_486fr]">
+    <div aria-busy="true" aria-label="Loading settings" className="grid items-start gap-5 @min-[60rem]/main:grid-cols-[672fr_486fr]">
       <div className="flex flex-col gap-5">
         {[0, 1, 2, 3].map((i) => (
           <div key={i} className={cn(card, 'flex flex-col gap-2.5', i === 1 && 'min-h-[18rem]')}>

@@ -80,7 +80,7 @@ export default function PlanPage() {
           ))}
         </div>
 
-        <div className="grid items-start gap-4 lg:grid-cols-[2fr_1fr] lg:gap-6">
+        <div className="grid items-start gap-4 @min-[60rem]/main:grid-cols-[2fr_1fr] @min-[60rem]/main:gap-6">
           <div className="overflow-hidden rounded-[var(--radius-4)] bg-card shadow-[inset_0_0_0_1px_var(--line)]">
             {loading ? (
               <PlanRowsSkeleton />

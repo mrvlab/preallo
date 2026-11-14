@@ -43,7 +43,7 @@ function Shell({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen w-full flex-col bg-[var(--side)] lg:flex-row">
       <aside className="sticky top-0 hidden h-screen w-[14.7rem] shrink-0 flex-col justify-between py-5 pl-5 lg:flex">
-        <div className="flex min-h-0 flex-col">
+        <div className="flex min-h-0 flex-1 flex-col">
           <Logo />
           <nav className="flex flex-col gap-1.5">
             {nav.map(({ href, label, Icon }) => (
@@ -69,7 +69,7 @@ function Shell({ children }: { children: ReactNode }) {
           </nav>
           <MonthsNav />
         </div>
-        <div className="flex h-8 items-center justify-between gap-2 px-2">
+        <div className="mt-3 flex h-8 shrink-0 items-center justify-between gap-2 px-2">
           <div className="flex min-w-0 items-center gap-2.5">
             <UserButton appearance={{ elements: { userButtonAvatarBox: 'size-[1.4rem]' } }} />
             <span className="truncate text-sm text-[var(--text)]">{displayName}</span>
@@ -87,7 +87,7 @@ function Shell({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      <main className="min-w-0 flex-1 bg-background pb-[5.5rem] lg:m-5 lg:rounded-[var(--radius-5)] lg:pb-0 lg:shadow-[inset_0_0_0_1px_var(--line)]">
+      <main className="@container/main min-w-0 flex-1 bg-background pb-[5.5rem] lg:m-5 lg:rounded-[var(--radius-5)] lg:pb-0 lg:shadow-[inset_0_0_0_1px_var(--line)]">
         {children}
       </main>
 

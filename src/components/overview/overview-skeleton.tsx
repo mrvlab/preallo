@@ -2,7 +2,7 @@ import { Bone } from '@/components/ui/skeleton-block'
 
 export function OverviewSkeleton() {
   return (
-    <div aria-busy="true" aria-label="Loading overview" className="grid gap-6 lg:grid-cols-[672fr_486fr]">
+    <div aria-busy="true" aria-label="Loading overview" className="grid gap-6 @min-[60rem]/main:grid-cols-[672fr_486fr]">
       <div className="flex flex-col gap-6">
         <section className="flex flex-col items-center rounded-[var(--radius-4)] bg-[var(--hero-bg)] px-7 pt-9 pb-6">
           <Bone className="h-3 w-24" shade="mid" />

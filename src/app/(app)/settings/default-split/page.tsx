@@ -115,13 +115,13 @@ export default function DefaultSplitPage() {
         </p>
       ) : (
         <>
-          <section aria-label="Your history" className="grid gap-5 md:grid-cols-3">
+          <section aria-label="Your history" className="grid gap-5 @min-[42rem]/main:grid-cols-3">
             {BUCKETS.map((b) => (
               <HistoryCard key={b} bucket={b} stats={analysis.stats[b]} series={analysis.series.map((s) => s[b])} keys={analysis.series.map((s) => s.key)} />
             ))}
           </section>
 
-          <div className="mt-5 grid items-start gap-5 lg:grid-cols-[672fr_486fr]">
+          <div className="mt-5 grid items-start gap-5 @min-[60rem]/main:grid-cols-[672fr_486fr]">
             <ProposalCard
               current={me.defaultSplit}
               split={activeSplit}
@@ -360,7 +360,7 @@ function SavingsCard({
 function PageSkeleton() {
   return (
     <div aria-busy="true" aria-label="Loading analysis">
-      <div className="grid gap-5 md:grid-cols-3">
+      <div className="grid gap-5 @min-[42rem]/main:grid-cols-3">
         {[0, 1, 2].map((i) => (
           <div key={i} className={cn(card, 'flex flex-col gap-2.5')}>
             <Bone className="h-3.5 w-20" shade="mid" />
@@ -374,7 +374,7 @@ function PageSkeleton() {
           </div>
         ))}
       </div>
-      <div className="mt-5 grid gap-5 lg:grid-cols-[672fr_486fr]">
+      <div className="mt-5 grid gap-5 @min-[60rem]/main:grid-cols-[672fr_486fr]">
         <div className={cn(card, 'flex min-h-[22rem] flex-col gap-3')}>
           <Bone className="h-3.5 w-32" shade="soft" />
           <Bone className="h-[2.125rem] w-40" shade="strong" />

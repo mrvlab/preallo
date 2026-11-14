@@ -10,18 +10,36 @@ type Props = {
   income: number
   reserved: number
   missingCount: number
+  paid: number
+  payable: number
 }
 
-export function HeroCard({ free, income, reserved, missingCount }: Props) {
+function softBand(v: number) {
+  return Math.round(v / 100) * 100
+}
+
+export function HeroCard({
+  free,
+  income,
+  reserved,
+  missingCount,
+  paid,
+  payable,
+}: Props) {
   const [view, setView] = useState<'month' | 'week'>('month')
   const neg = free < 0
   const dl = daysLeftInMonth()
   const wl = weeksLeft()
-  const value = view === 'month' ? free : wl > 0 ? free / wl : 0
+  const today = new Date().getUTCDate()
+  // Exact amount early in the cycle or when plan is incomplete, softened otherwise.
+  const exact = today <= 2 || missingCount > 0 || neg
+  const monthValue = exact ? free : softBand(free)
+  const weekValue = wl > 0 ? free / wl : 0
+  const value = view === 'month' ? monthValue : weekValue
   const sub =
     view === 'month'
-      ? `for the next ${dl} days`
-      : `a week for the next ${wl} weeks`
+      ? `for the next ${dl} ${dl === 1 ? 'day' : 'days'}`
+      : `a week for the next ${wl} ${wl === 1 ? 'week' : 'weeks'}`
 
   return (
     <section className="flex flex-col items-center gap-0 rounded-[var(--radius-4)] bg-[var(--hero-bg)] px-7 pt-10 pb-6 text-center">
@@ -59,12 +77,21 @@ export function HeroCard({ free, income, reserved, missingCount }: Props) {
       <div className="mt-7 grid w-full grid-cols-3 gap-4 border-t border-[var(--line)] pt-5 text-left">
         <Stat label="SALARY" value={krw(income)} underline />
         <Stat label="RESERVED" value={krw(reserved)} />
-        <Stat
-          label="TO FILL IN"
-          value={missingCount === 0 ? 'none' : `${missingCount} amount${missingCount === 1 ? '' : 's'}`}
-          underline={missingCount > 0}
-          tone={missingCount > 0 ? 'attn' : undefined}
-        />
+        {missingCount > 0 ? (
+          <Stat
+            label="TO FILL IN"
+            value={`${missingCount} amount${missingCount === 1 ? '' : 's'}`}
+            underline
+            tone="attn"
+          />
+        ) : (
+          <Stat
+            label="PAID"
+            value={`${paid} of ${payable}`}
+            underline={payable > 0}
+            tone={paid === payable && payable > 0 ? 'done' : undefined}
+          />
+        )}
       </div>
     </section>
   )
@@ -79,7 +106,7 @@ function Stat({
   label: string
   value: string
   underline?: boolean
-  tone?: 'attn'
+  tone?: 'attn' | 'done'
 }) {
   return (
     <div className="flex flex-col gap-0.5 min-w-0">
@@ -89,7 +116,11 @@ function Stat({
       <span
         className={cn(
           'text-[16px] font-semibold tabular-nums whitespace-nowrap',
-          tone === 'attn' ? 'text-[var(--amber)]' : 'text-[var(--text)]',
+          tone === 'attn'
+            ? 'text-[var(--amber)]'
+            : tone === 'done'
+              ? 'text-[var(--ok)]'
+              : 'text-[var(--text)]',
           underline &&
             'underline decoration-[var(--p-16)] decoration-1 underline-offset-[4px]',
         )}

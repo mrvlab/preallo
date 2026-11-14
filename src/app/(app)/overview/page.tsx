@@ -67,10 +67,9 @@ export default function OverviewPage() {
     )
   }
 
-  const { totals, income, reserved, free, pct, goals, itemCount } = summary
-  const missingCount = items.filter(
-    (i) => i.amount == null || i.amount === 0,
-  ).length
+  const { totals, income, reserved, free, pct, goals, paid, payable, missing } =
+    summary
+  const missingCount = missing
   const [year, m] = key.split('-')
   const monthName = MONTHS_LONG[Number(m) - 1]
 
@@ -104,6 +103,8 @@ export default function OverviewPage() {
             income={income}
             reserved={reserved}
             missingCount={missingCount}
+            paid={paid}
+            payable={payable}
           />
           {(['needs', 'wants', 'savings'] as Bucket[]).map((b) => (
             <BucketCard

@@ -10,7 +10,34 @@ export type RawRow = {
 export type FormatParser = {
   slug: string
   match: (rows: string[][]) => boolean
-  parse: (rows: string[][], ctx: { file: string; monthKey: string }) => RawRow[]
+  parse: (rows: string[][], ctx: { file: string; monthKey: string; sheet?: string }) => RawRow[]
+}
+
+// Month-year codes like OCT26, SEP26, AUG26 used as Excel sheet names.
+const SHEET_MONTH_RE = /^([A-Z]{3})(\d{2})$/
+const EN_SHORT_UPPER: Record<string, number> = {
+  JAN: 1,
+  FEB: 2,
+  MAR: 3,
+  APR: 4,
+  MAY: 5,
+  JUN: 6,
+  JUL: 7,
+  AUG: 8,
+  SEP: 9,
+  OCT: 10,
+  NOV: 11,
+  DEC: 12,
+}
+
+export function monthKeyFromSheetName(name: string): string | null {
+  const match = name.toUpperCase().match(SHEET_MONTH_RE)
+  if (!match) return null
+  const monthNum = EN_SHORT_UPPER[match[1]]
+  if (!monthNum) return null
+  const n = Number(match[2])
+  const year = n < 70 ? 2000 + n : 1900 + n
+  return `${year}-${String(monthNum).padStart(2, '0')}`
 }
 
 const SV_MONTHS: Record<string, number> = {

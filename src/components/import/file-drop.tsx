@@ -2,14 +2,20 @@
 
 import { useRef, useState } from 'react'
 import Papa from 'papaparse'
+import * as XLSX from 'xlsx'
 import { useMutation } from 'convex/react'
 import { Upload } from 'lucide-react'
-import { runParsers } from '@/lib/parsers/registry'
+import {
+  runParsers,
+  runParsersOnSheet,
+  type SheetParseResult,
+} from '@/lib/parsers/registry'
 import { classify } from '@/lib/categorise/apply'
 import { api } from '../../../convex/_generated/api'
 
 type LogEntry = {
   file: string
+  sheet?: string
   status: 'ok' | 'skipped'
   monthKey?: string
   parser?: string
@@ -26,67 +32,99 @@ export function FileDrop() {
   const [busy, setBusy] = useState(false)
   const [log, setLog] = useState<LogEntry[]>([])
 
+  async function processResult(result: SheetParseResult): Promise<LogEntry> {
+    if (result.status === 'skipped') {
+      return {
+        file: result.file,
+        sheet: result.sheet,
+        status: 'skipped',
+        reason: result.reason,
+      }
+    }
+    const classified = result.rows.map((r) => {
+      const c = classify(r.description, r.bucketHint)
+      return {
+        date: r.date,
+        monthKey: result.monthKey,
+        description: r.description,
+        amount: r.amount,
+        source: r.source,
+        bucket: c.bucket,
+        savingsSlug: c.savingsSlug,
+        category: c.category,
+        confidence: c.confidence,
+        needsReview: c.needsReview,
+      }
+    })
+    const salaryGuess = Math.max(
+      0,
+      ...classified.filter((r) => r.amount > 10000).map((r) => r.amount),
+    )
+    await ensureMonth({ key: result.monthKey, income: salaryGuess })
+    const { inserted, updated } = await upsert({ rows: classified })
+    const flagged = classified.filter((r) => r.needsReview).length
+    return {
+      file: result.file,
+      sheet: result.sheet,
+      status: 'ok',
+      monthKey: result.monthKey,
+      parser: result.parserSlug,
+      inserted,
+      updated,
+      flagged,
+    }
+  }
+
   async function handleFiles(files: FileList) {
     setBusy(true)
     const entries: LogEntry[] = []
     for (const file of Array.from(files)) {
-      if (!file.name.toLowerCase().endsWith('.csv')) {
+      const lower = file.name.toLowerCase()
+      if (/template/i.test(file.name)) {
         entries.push({
           file: file.name,
           status: 'skipped',
-          reason: 'Not a .csv file',
+          reason: 'Template file skipped by name',
         })
         continue
       }
-      const text = await file.text()
-      const parsed = Papa.parse<string[]>(text, { skipEmptyLines: false })
-      const rows = (parsed.data ?? []).filter((r) =>
-        Array.isArray(r),
-      ) as string[][]
-      const result = runParsers(file.name, rows)
-      if (result.status === 'skipped') {
-        entries.push({
-          file: file.name,
-          status: 'skipped',
-          reason: result.reason,
-        })
+      if (lower.endsWith('.csv')) {
+        const text = await file.text()
+        const parsed = Papa.parse<string[]>(text, { skipEmptyLines: false })
+        const rows = (parsed.data ?? []).filter(Array.isArray) as string[][]
+        const result = runParsers(file.name, rows)
+        entries.push(await processResult(result))
         continue
       }
-      const classified = result.rows.map((r) => {
-        const c = classify(r.description, r.bucketHint)
-        return {
-          date: r.date,
-          monthKey: result.monthKey,
-          description: r.description,
-          amount: r.amount,
-          source: r.source,
-          bucket: c.bucket,
-          savingsSlug: c.savingsSlug,
-          category: c.category,
-          confidence: c.confidence,
-          needsReview: c.needsReview,
+      if (lower.endsWith('.xlsx') || lower.endsWith('.xls')) {
+        const buf = await file.arrayBuffer()
+        const wb = XLSX.read(buf, { type: 'array' })
+        const anyParsed = wb.SheetNames.some((n) => /^[A-Z]{3}\d{2}$/i.test(n))
+        for (const sheetName of wb.SheetNames) {
+          const sheet = wb.Sheets[sheetName]
+          const rows = XLSX.utils.sheet_to_json<string[]>(sheet, {
+            header: 1,
+            blankrows: false,
+            defval: '',
+          }) as string[][]
+          if (anyParsed && !/^[A-Z]{3}\d{2}$/i.test(sheetName)) {
+            entries.push({
+              file: file.name,
+              sheet: sheetName,
+              status: 'skipped',
+              reason: 'Not a month tab (expected pattern e.g. OCT26)',
+            })
+            continue
+          }
+          const result = runParsersOnSheet(file.name, sheetName, rows)
+          entries.push(await processResult(result))
         }
-      })
-      const salaryGuess = Math.max(
-        0,
-        ...classified
-          .filter((r) => r.amount > 10000)
-          .map((r) => r.amount),
-      )
-      await ensureMonth({
-        key: result.monthKey,
-        income: salaryGuess,
-      })
-      const { inserted, updated } = await upsert({ rows: classified })
-      const flagged = classified.filter((r) => r.needsReview).length
+        continue
+      }
       entries.push({
         file: file.name,
-        status: 'ok',
-        monthKey: result.monthKey,
-        parser: result.parserSlug,
-        inserted,
-        updated,
-        flagged,
+        status: 'skipped',
+        reason: 'Unsupported file type (expected .csv, .xlsx or .xls)',
       })
     }
     setLog((prev) => [...entries, ...prev])
@@ -105,10 +143,10 @@ export function FileDrop() {
       >
         <Upload size={28} className="text-[var(--muted-foreground)]" />
         <p className="text-sm text-[var(--text)]">
-          Drop one or more CSV files here
+          Drop one or more CSV or XLSX files here
         </p>
         <p className="text-xs text-[var(--muted-foreground)]">
-          Files with TEMPLATE in the name are skipped automatically.
+          XLSX workbooks read only sheets named like OCT26. CSV files are treated as a single month.
         </p>
         <button
           disabled={busy}
@@ -120,7 +158,7 @@ export function FileDrop() {
         <input
           ref={inputRef}
           type="file"
-          accept=".csv"
+          accept=".csv,.xlsx,.xls"
           multiple
           className="hidden"
           onChange={(e) => e.target.files && handleFiles(e.target.files)}
@@ -138,6 +176,11 @@ export function FileDrop() {
             >
               <span className="flex-1 truncate">
                 <span className="text-[var(--text)]">{e.file}</span>
+                {e.sheet && e.sheet !== 'csv' && (
+                  <span className="ml-2 text-xs text-[var(--muted-foreground)]">
+                    {e.sheet}
+                  </span>
+                )}
                 {e.monthKey && (
                   <span className="ml-2 text-xs text-[var(--muted-foreground)]">
                     {e.monthKey} · {e.parser}

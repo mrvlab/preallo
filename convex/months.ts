@@ -82,9 +82,16 @@ export const summary = query({
       savings: income > 0 ? (totals.savings / income) * 100 : 0,
     }
 
+    const paid = items.filter((i) => i.paid).length
+    const payable = items.filter((i) => (i.amount ?? 0) > 0).length
+    const missing = items.filter((i) => i.amount == null || i.amount === 0).length
+
     return {
       month,
       itemCount: items.length,
+      paid,
+      payable,
+      missing,
       totals,
       income,
       fixedWants,

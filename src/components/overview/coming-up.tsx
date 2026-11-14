@@ -32,6 +32,9 @@ export function ComingUp({ items, monthKey }: Props) {
     .sort((a, b) => (a.due ?? 99) - (b.due ?? 99))
   const total = unpaid.reduce((a, i) => a + (i.amount ?? 0), 0)
   const today = new Date().getUTCDate()
+  const shown = unpaid.slice(0, 7)
+  const todayIdx = shown.findIndex((i) => (i.due ?? 0) >= today)
+  const insertTodayAt = todayIdx === -1 ? shown.length : todayIdx
 
   return (
     <section className="flex flex-col gap-3 rounded-[var(--radius-4)] border border-[var(--line)] bg-card p-5 md:p-6">
@@ -52,44 +55,48 @@ export function ComingUp({ items, monthKey }: Props) {
         </p>
       ) : (
         <ul className="flex flex-col pt-2">
-          {unpaid.slice(0, 7).map((i) => {
+          {shown.map((i, idx) => {
             const isToday = i.due === today
+            const past = (i.due ?? 0) < today
             return (
-              <li
-                key={i._id}
-                className="grid grid-cols-[18px_60px_1fr_auto] items-center gap-3 py-1.5 text-sm"
-              >
-                <span
-                  className={
-                    isToday
-                      ? 'h-2.5 w-2.5 rounded-full bg-[var(--brand-primary)] ring-[3px] ring-[var(--p-16)]'
-                      : 'h-1.5 w-1.5 rounded-full bg-[var(--p-16)]'
-                  }
-                />
-                <span
-                  className={
-                    isToday
-                      ? 'text-xs font-medium text-[var(--brand-primary)]'
-                      : 'text-xs text-[var(--muted-foreground)]'
-                  }
-                >
-                  {dayLabel(monthKey, i.due!)}
-                </span>
-                <span className="flex items-center gap-1.5 truncate text-[var(--text)]">
-                  {i.locked && (
-                    <Lock
-                      size={11}
-                      className="shrink-0 text-[var(--muted-foreground)]"
-                    />
-                  )}
-                  <span className="truncate">{i.name}</span>
-                </span>
-                <span className="tabular-nums text-[var(--muted-foreground)]">
-                  {krw(i.amount ?? 0)}
-                </span>
+              <li key={i._id} className="contents">
+                {idx === insertTodayAt && idx !== 0 && <TodayDivider />}
+                <div className="grid grid-cols-[18px_60px_1fr_auto] items-center gap-3 py-1.5 text-sm">
+                  <span
+                    className={
+                      isToday
+                        ? 'h-2.5 w-2.5 rounded-full bg-[var(--brand-primary)] ring-[3px] ring-[var(--p-16)]'
+                        : past
+                          ? 'h-1.5 w-1.5 rounded-full bg-[var(--muted-foreground)] opacity-50'
+                          : 'h-1.5 w-1.5 rounded-full bg-[var(--p-16)]'
+                    }
+                  />
+                  <span
+                    className={
+                      isToday
+                        ? 'text-xs font-medium text-[var(--brand-primary)]'
+                        : 'text-xs text-[var(--muted-foreground)]'
+                    }
+                  >
+                    {dayLabel(monthKey, i.due!)}
+                  </span>
+                  <span className="flex items-center gap-1.5 truncate text-[var(--text)]">
+                    {i.locked && (
+                      <Lock
+                        size={11}
+                        className="shrink-0 text-[var(--muted-foreground)]"
+                      />
+                    )}
+                    <span className="truncate">{i.name}</span>
+                  </span>
+                  <span className="tabular-nums text-[var(--muted-foreground)]">
+                    {krw(i.amount ?? 0)}
+                  </span>
+                </div>
               </li>
             )
           })}
+          {insertTodayAt === shown.length && shown.length > 0 && <TodayDivider />}
         </ul>
       )}
       {unpaid.length > 0 && (
@@ -101,5 +108,16 @@ export function ComingUp({ items, monthKey }: Props) {
         </Link>
       )}
     </section>
+  )
+}
+
+function TodayDivider() {
+  return (
+    <div className="relative my-2 flex items-center">
+      <span className="absolute left-0 -top-1 bg-card pr-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--brand-primary)]">
+        Today
+      </span>
+      <div className="mt-2 w-full border-t border-dashed border-[var(--brand-primary)] opacity-40" />
+    </div>
   )
 }

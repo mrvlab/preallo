@@ -8,6 +8,7 @@ import { ItemModal, type ItemTarget } from './item-modal'
 import { IncomeModal } from './income-modal'
 import { MonthGoalsModal } from './month-goals-modal'
 import { MonthPickerModal } from './month-picker-modal'
+import { DefaultSalaryModal } from './default-salary-modal'
 import { NewMonthFlow } from './new-month-flow'
 import { shiftKey } from '@/lib/months'
 
@@ -15,6 +16,7 @@ type Modals = {
   openItem: (target: ItemTarget) => void
   openIncome: () => void
   openGoals: () => void
+  openDefaultSalary: () => void
   openPicker: () => void
   startMonth: (key?: string) => void
 }
@@ -30,6 +32,7 @@ export function ModalsProvider({ children }: { children: ReactNode }) {
   const [item, setItem] = useState<ItemTarget | null>(null)
   const [income, setIncome] = useState(false)
   const [goals, setGoals] = useState(false)
+  const [defaultSalary, setDefaultSalary] = useState(false)
   const [picker, setPicker] = useState(false)
   const [flowKey, setFlowKey] = useState<string | null>(null)
 
@@ -41,6 +44,7 @@ export function ModalsProvider({ children }: { children: ReactNode }) {
     openItem: setItem,
     openIncome: () => setIncome(true),
     openGoals: () => setGoals(true),
+    openDefaultSalary: () => setDefaultSalary(true),
     openPicker: () => setPicker(true),
     startMonth: (key) => setFlowKey(key ?? shiftKey(latest, 1)),
   }
@@ -61,6 +65,11 @@ export function ModalsProvider({ children }: { children: ReactNode }) {
         goals={summary?.goals ?? { needs: 50, wants: 30, savings: 20 }}
         income={summary?.income ?? 0}
         onClose={() => setGoals(false)}
+      />
+      <DefaultSalaryModal
+        open={defaultSalary}
+        salary={me?.defaultSalary ?? 0}
+        onClose={() => setDefaultSalary(false)}
       />
       <MonthPickerModal
         open={picker}

@@ -80,6 +80,17 @@ export const me = query({
   },
 })
 
+export const updateName = mutation({
+  args: { name: v.string() },
+  returns: v.null(),
+  handler: async (ctx, { name }) => {
+    const userId = await getUserFromIdentity(ctx)
+    if (!userId) throw new Error('Not authenticated')
+    await ctx.db.patch(userId, { name: name.trim() })
+    return null
+  },
+})
+
 export const updateDefaultSalary = mutation({
   args: { salary: v.number() },
   returns: v.null(),

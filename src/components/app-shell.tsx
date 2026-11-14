@@ -36,7 +36,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 function Shell({ children }: { children: ReactNode }) {
   const path = usePathname() ?? '/'
   const { user } = useUser()
-  const displayName = user?.firstName ?? user?.fullName ?? 'Account'
+  const me = useQuery(api.users.me)
+  const displayName = me?.name || user?.firstName || user?.fullName || 'Account'
   const isActive = (href: string) => path === href || path.startsWith(href + '/')
 
   return (

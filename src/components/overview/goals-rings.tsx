@@ -46,12 +46,6 @@ export function GoalsRings({ size = 170, pct, goals }: Props) {
     savings: CX - SW * 2.5 - GAP * 2 - 2,
   }
 
-  const onTarget = BUCKETS.filter((k) => {
-    const used = goals[k] > 0 ? pct[k] / goals[k] : 0
-    if (k === 'savings') return used >= 0.995
-    return used <= 1.005
-  }).length
-
   return (
     <div className="relative flex items-center justify-center">
       <svg
@@ -59,7 +53,6 @@ export function GoalsRings({ size = 170, pct, goals }: Props) {
         width={size}
         height={size}
         className="rings"
-        aria-label={`${onTarget} of 3 on target`}
       >
         {BUCKETS.map((k) => {
           const R = radii[k]
@@ -118,15 +111,6 @@ export function GoalsRings({ size = 170, pct, goals }: Props) {
           )
         })}
       </svg>
-      <div className="absolute flex flex-col items-center">
-        <b className="text-3xl font-semibold text-[var(--text)] tabular-nums">
-          {onTarget}
-          <i className="not-italic text-xl text-[var(--muted-foreground)]">
-            /3
-          </i>
-        </b>
-        <small className="text-xs text-[var(--muted-foreground)]">on target</small>
-      </div>
     </div>
   )
 }

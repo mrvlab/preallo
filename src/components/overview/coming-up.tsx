@@ -1,5 +1,7 @@
 'use client'
 
+import { Lock } from 'lucide-react'
+import Link from 'next/link'
 import { krw } from '@/lib/format'
 import { RollingDigits } from '@/components/motion/rolling-digits'
 
@@ -10,51 +12,93 @@ type Item = {
   due?: number
   bucket: string
   paid: boolean
+  locked: boolean
+  category?: string
 }
 
-type Props = { items: Item[] }
+type Props = { items: Item[]; monthKey: string }
 
-export function ComingUp({ items }: Props) {
+const WEEKDAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+function dayLabel(monthKey: string, day: number) {
+  const [y, m] = monthKey.split('-').map(Number)
+  const date = new Date(Date.UTC(y, m - 1, day))
+  return `${WEEKDAY_SHORT[date.getUTCDay()]} ${day}`
+}
+
+export function ComingUp({ items, monthKey }: Props) {
   const unpaid = items
-    .filter((i) => !i.paid && i.amount && i.amount > 0)
+    .filter((i) => !i.paid && i.amount && i.amount > 0 && i.due)
     .sort((a, b) => (a.due ?? 99) - (b.due ?? 99))
-    .slice(0, 5)
   const total = unpaid.reduce((a, i) => a + (i.amount ?? 0), 0)
+  const today = new Date().getUTCDate()
 
   return (
-    <section className="flex flex-col gap-3 rounded-[var(--radius-4)] border border-[var(--line)] bg-card p-5">
-      <div className="flex items-baseline justify-between">
-        <div className="text-[11px] font-semibold tracking-[0.14em] text-[var(--muted-foreground)]">
+    <section className="flex flex-col gap-3 rounded-[var(--radius-4)] border border-[var(--line)] bg-card p-5 md:p-6">
+      <div className="flex flex-col gap-0.5">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.07em] text-[var(--muted-foreground)]">
           COMING UP
-        </div>
-        <div className="text-sm font-semibold tabular-nums text-[var(--text)]">
+        </span>
+        <span className="text-[24px] font-semibold leading-tight tracking-[-0.02em] tabular-nums text-[var(--text)]">
           <RollingDigits value={krw(total)} />
-        </div>
+        </span>
+        <span className="text-xs text-[var(--muted-foreground)]">
+          still to leave your account
+        </span>
       </div>
       {unpaid.length === 0 ? (
         <p className="text-sm text-[var(--muted-foreground)]">
-          Nothing pencilled in. Items with amounts show here.
+          Nothing pencilled in. Items with amounts and a due day show here.
         </p>
       ) : (
-        <ul className="flex flex-col gap-1.5">
-          {unpaid.map((i) => (
-            <li
-              key={i._id}
-              className="flex items-center justify-between gap-3 text-sm"
-            >
-              <span className="flex items-center gap-2 text-[var(--text)]">
-                <i
-                  className="h-1.5 w-1.5 rounded-full"
-                  style={{ background: `var(--${i.bucket})` }}
+        <ul className="flex flex-col pt-2">
+          {unpaid.slice(0, 7).map((i) => {
+            const isToday = i.due === today
+            return (
+              <li
+                key={i._id}
+                className="grid grid-cols-[18px_60px_1fr_auto] items-center gap-3 py-1.5 text-sm"
+              >
+                <span
+                  className={
+                    isToday
+                      ? 'h-2.5 w-2.5 rounded-full bg-[var(--brand-primary)] ring-[3px] ring-[var(--p-16)]'
+                      : 'h-1.5 w-1.5 rounded-full bg-[var(--p-16)]'
+                  }
                 />
-                <span className="truncate">{i.name}</span>
-              </span>
-              <span className="tabular-nums text-[var(--muted-foreground)]">
-                {i.due ? `${i.due}.` : ''} {krw(i.amount ?? 0)}
-              </span>
-            </li>
-          ))}
+                <span
+                  className={
+                    isToday
+                      ? 'text-xs font-medium text-[var(--brand-primary)]'
+                      : 'text-xs text-[var(--muted-foreground)]'
+                  }
+                >
+                  {dayLabel(monthKey, i.due!)}
+                </span>
+                <span className="flex items-center gap-1.5 truncate text-[var(--text)]">
+                  {i.locked && (
+                    <Lock
+                      size={11}
+                      className="shrink-0 text-[var(--muted-foreground)]"
+                    />
+                  )}
+                  <span className="truncate">{i.name}</span>
+                </span>
+                <span className="tabular-nums text-[var(--muted-foreground)]">
+                  {krw(i.amount ?? 0)}
+                </span>
+              </li>
+            )
+          })}
         </ul>
+      )}
+      {unpaid.length > 0 && (
+        <Link
+          href="/plan"
+          className="text-xs font-medium text-[var(--brand-primary)] underline decoration-[var(--p-16)] decoration-1 underline-offset-[3px] hover:decoration-[var(--brand-primary)]"
+        >
+          All {unpaid.length} in Plan
+        </Link>
       )}
     </section>
   )

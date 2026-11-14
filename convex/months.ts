@@ -99,6 +99,52 @@ export const summary = query({
   },
 })
 
+export const bucketHistory = query({
+  args: { key: v.string(), bucket: v.string(), months: v.number() },
+  handler: async (ctx, { key, bucket, months }) => {
+    const userId = await getUserFromIdentity(ctx)
+    if (!userId) return []
+    const all = await ctx.db
+      .query('months')
+      .withIndex('byUserKey', (q) => q.eq('userId', userId))
+      .collect()
+    const sorted = all
+      .filter((m) => m.key <= key)
+      .sort((a, b) => (a.key < b.key ? 1 : -1))
+      .slice(0, months)
+      .reverse()
+
+    const results: Array<{ key: string; amount: number; goal: number }> = []
+    for (const m of sorted) {
+      const items = await ctx.db
+        .query('items')
+        .withIndex('byUserMonthBucket', (q) =>
+          q
+            .eq('userId', userId)
+            .eq('monthKey', m.key)
+            .eq('bucket', bucket),
+        )
+        .collect()
+      const itemsTotal = items.reduce((a, i) => a + (i.amount ?? 0), 0)
+
+      const txns = await ctx.db
+        .query('transactions')
+        .withIndex('byUserMonth', (q) =>
+          q.eq('userId', userId).eq('monthKey', m.key),
+        )
+        .collect()
+      const txnsTotal = txns
+        .filter((t) => t.bucket === bucket && t.amount < 0)
+        .reduce((a, t) => a + Math.abs(t.amount), 0)
+
+      const amount = Math.max(itemsTotal, txnsTotal)
+      const goal = (m.income * (m.goals[bucket as keyof typeof m.goals] || 0)) / 100
+      results.push({ key: m.key, amount, goal })
+    }
+    return results
+  },
+})
+
 export const ensureImportedMonth = mutation({
   args: { key: v.string(), income: v.number() },
   returns: v.id('months'),

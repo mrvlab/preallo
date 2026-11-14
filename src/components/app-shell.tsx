@@ -3,13 +3,23 @@
 import { ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { UserButton } from '@clerk/nextjs'
-import { Home, ListChecks, Settings } from 'lucide-react'
+import { useQuery } from 'convex/react'
+import { UserButton, useUser } from '@clerk/nextjs'
+import {
+  Clock,
+  Home,
+  ListChecks,
+  Lock,
+  Plus,
+  Settings,
+  Settings2,
+} from 'lucide-react'
+import { api } from '../../convex/_generated/api'
 import { cn } from '@/lib/utils'
 
 const navDesktop = [
-  { href: '/overview', label: 'Overview' },
-  { href: '/plan', label: 'Plan' },
+  { href: '/overview', label: 'Overview', Icon: Clock },
+  { href: '/plan', label: 'Plan', Icon: ListChecks },
 ] as const
 
 const navMobile = [
@@ -18,55 +28,85 @@ const navMobile = [
   { href: '/settings', label: 'Settings', Icon: Settings },
 ] as const
 
+const MONTHS_LONG = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+]
+
+function currentMonthKey() {
+  const d = new Date()
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0')
+  return `${d.getUTCFullYear()}-${m}`
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const path = usePathname() ?? '/'
+  const months = useQuery(api.months.listForUser) ?? []
+  const current = currentMonthKey()
+  const { user } = useUser()
+  const displayName =
+    user?.firstName ?? user?.fullName ?? user?.primaryEmailAddress?.emailAddress ?? 'Account'
+
   return (
     <div className="flex min-h-screen w-full flex-col md:flex-row bg-[var(--side)]">
-      <aside className="hidden md:flex w-60 shrink-0 flex-col justify-between bg-[var(--side)] px-5 py-6">
-        <div>
+      <aside className="hidden md:flex sticky top-0 h-screen w-[220px] shrink-0 flex-col justify-between bg-[var(--side)] px-4 py-6">
+        <div className="flex flex-col gap-6">
           <Link
             href="/overview"
-            className="block px-2 pb-6 font-semibold tracking-[0.18em] text-[var(--brand-primary)]"
+            className="block px-3 pb-2 font-semibold tracking-[0.18em] text-[var(--brand-primary)]"
             style={{ fontSize: 15 }}
           >
             PREALLO
           </Link>
           <nav className="flex flex-col gap-1">
-            {navDesktop.map(({ href, label }) => {
+            {navDesktop.map(({ href, label, Icon }) => {
               const active = path === href || path.startsWith(href + '/')
               return (
                 <Link
                   key={href}
                   href={href}
                   className={cn(
-                    'h-9 rounded-[var(--radius-3)] px-3 text-sm leading-9 transition-colors duration-[120ms]',
+                    'flex h-9 items-center gap-3 rounded-[var(--radius-3)] px-3 text-sm transition-colors duration-[120ms]',
                     active
-                      ? 'bg-[var(--p-06)] text-[var(--brand-primary)] font-medium'
+                      ? 'bg-[var(--p-06)] font-medium text-[var(--text)]'
                       : 'text-[var(--muted-foreground)] hover:bg-[var(--p-04)]',
                   )}
                 >
+                  <Icon size={16} />
                   {label}
                 </Link>
               )
             })}
           </nav>
+          <MonthsNav months={months} current={current} />
         </div>
-        <Link
-          href="/settings"
-          className={cn(
-            'flex items-center gap-3 rounded-[var(--radius-3)] px-2 py-2 text-sm transition-colors duration-[120ms] hover:bg-[var(--p-04)]',
-            path.startsWith('/settings') && 'bg-[var(--p-06)]',
-          )}
-        >
-          <UserButton
-            appearance={{ elements: { userButtonAvatarBox: 'size-8' } }}
-          />
-          <span className="flex-1 truncate text-[var(--text)]">Account</span>
-          <Settings
-            size={16}
-            className="text-[var(--muted-foreground)]"
-          />
-        </Link>
+        <div className="flex items-center justify-between gap-2 px-1 pt-2">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <UserButton
+              appearance={{ elements: { userButtonAvatarBox: 'size-7' } }}
+            />
+            <span className="truncate text-sm text-[var(--text)]">
+              {displayName}
+            </span>
+          </div>
+          <Link
+            href="/settings"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-3)] text-[var(--muted-foreground)] hover:bg-[var(--p-06)]"
+            aria-label="Settings"
+          >
+            <Settings2 size={14} />
+          </Link>
+        </div>
       </aside>
 
       <main className="flex-1 bg-background pb-20 md:my-3 md:mr-3 md:rounded-[var(--radius-5)] md:border md:border-[var(--line)] md:pb-0">
@@ -93,6 +133,69 @@ export function AppShell({ children }: { children: ReactNode }) {
           )
         })}
       </nav>
+    </div>
+  )
+}
+
+function MonthsNav({
+  months,
+  current,
+}: {
+  months: Array<{ key: string; imported: boolean }>
+  current: string
+}) {
+  const items = months.slice(0, 5)
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center justify-between px-3 text-xs font-semibold uppercase tracking-[0.07em] text-[var(--muted-foreground)]">
+        <span>Months</span>
+        <button
+          aria-label="New month"
+          className="flex h-5 w-5 items-center justify-center rounded text-[var(--muted-foreground)] hover:bg-[var(--p-06)] hover:text-[var(--text)]"
+        >
+          <Plus size={12} />
+        </button>
+      </div>
+      <ul className="flex flex-col">
+        {items.map((m) => {
+          const [y, mm] = m.key.split('-')
+          const active = m.key === current
+          const past = m.key < current
+          return (
+            <li key={m.key}>
+              <button className="flex w-full items-center gap-3 rounded-[var(--radius-3)] px-3 py-2 text-left text-sm transition-colors duration-[120ms] hover:bg-[var(--p-04)]">
+                <span
+                  className={cn(
+                    'h-2 w-2 rounded-full',
+                    active
+                      ? 'bg-[var(--brand-primary)]'
+                      : past
+                        ? 'bg-[var(--p-16)]'
+                        : 'border border-[var(--p-16)]',
+                  )}
+                />
+                <span
+                  className={cn(
+                    'flex-1',
+                    active
+                      ? 'font-medium text-[var(--text)]'
+                      : 'text-[var(--muted-foreground)]',
+                  )}
+                >
+                  {MONTHS_LONG[Number(mm) - 1]}{' '}
+                  <span className="text-xs">{y}</span>
+                </span>
+                {past && (
+                  <Lock
+                    size={12}
+                    className="text-[var(--muted-foreground)]"
+                  />
+                )}
+              </button>
+            </li>
+          )
+        })}
+      </ul>
     </div>
   )
 }

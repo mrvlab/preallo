@@ -71,6 +71,30 @@ const MONTH_WORDS: Record<string, number> = {
   dec: 12,
 }
 
+// Month keys for every tab of a workbook, in tab order. A tab without its own year
+// that comes after December (Budget 2023 ends with a "January") moves to the next year.
+export function workbookMonthKeys(file: string, sheets: string[]): Map<string, string | null> {
+  const out = new Map<string, string | null>()
+  let rollover = 0
+  let lastFileYearMonth = 0
+  for (const sheet of sheets) {
+    const key = monthKeyForSheet(file, sheet)
+    if (!key || sheetHasYear(sheet)) {
+      out.set(sheet, key)
+      continue
+    }
+    const [y, m] = key.split('-').map(Number)
+    if (m < lastFileYearMonth) rollover++
+    lastFileYearMonth = m
+    out.set(sheet, `${y + rollover}-${String(m).padStart(2, '0')}`)
+  }
+  return out
+}
+
+function sheetHasYear(sheet: string) {
+  return /(19|20)\d{2}|(^|[^0-9])\d{2}($|[^0-9])/.test(sheet.replace(/([a-zA-Z])(\d)/g, '$1 $2'))
+}
+
 // Workbook tabs are named "Januari", "Feb 24", "OCT26" and so on. The month comes
 // from the tab; the year from the tab when it has one, otherwise from the file name.
 export function monthKeyForSheet(file: string, sheet: string): string | null {

@@ -10,8 +10,8 @@ import {
   runParsersOnSheet,
   type SheetParseResult,
 } from '@/lib/parsers/registry'
-import { classify } from '@/lib/categorise/apply'
-import { monthKeyForSheet } from '@/lib/parsers/types'
+import { classify, learnBuckets, type LearnedBuckets } from '@/lib/categorise/apply'
+import { workbookMonthKeys } from '@/lib/parsers/types'
 import { api } from '../../../convex/_generated/api'
 
 type LogEntry = {
@@ -33,7 +33,7 @@ export function FileDrop() {
   const [busy, setBusy] = useState(false)
   const [log, setLog] = useState<LogEntry[]>([])
 
-  async function processResult(result: SheetParseResult): Promise<LogEntry> {
+  async function processResult(result: SheetParseResult, learned: LearnedBuckets): Promise<LogEntry> {
     if (result.status === 'skipped') {
       return {
         file: result.file,
@@ -46,7 +46,7 @@ export function FileDrop() {
       const c =
         r.kind === 'income'
           ? { bucket: undefined, savingsSlug: undefined, category: 'salary', confidence: 1, needsReview: false }
-          : classify(r.description, r.bucketHint, r.bucketSure)
+          : classify(r.description, r.bucketHint, r.bucketSure, learned)
       return {
         date: r.date,
         monthKey: result.monthKey,
@@ -60,11 +60,10 @@ export function FileDrop() {
         needsReview: c.needsReview,
       }
     })
-    const salaryGuess = Math.max(
-      0,
-      ...classified.filter((r) => r.amount > 10000).map((r) => r.amount),
-    )
-    await ensureMonth({ key: result.monthKey, income: salaryGuess })
+    const salary = classified
+      .filter((r) => r.category === 'salary' && r.amount > 0)
+      .reduce((a, r) => a + r.amount, 0)
+    await ensureMonth({ key: result.monthKey, income: salary })
     const { inserted, updated } = await upsert({ rows: classified })
     const flagged = classified.filter((r) => r.needsReview).length
     return {
@@ -79,9 +78,11 @@ export function FileDrop() {
     }
   }
 
+  // Read every file first so item buckets stated in newer sheets can sort the older ones.
   async function handleFiles(files: FileList) {
     setBusy(true)
     const entries: LogEntry[] = []
+    const results: Array<{ result: SheetParseResult; fromCsv: boolean }> = []
     for (const file of Array.from(files)) {
       const lower = file.name.toLowerCase()
       if (/template/i.test(file.name)) {
@@ -96,16 +97,17 @@ export function FileDrop() {
         const text = await file.text()
         const parsed = Papa.parse<string[]>(text, { skipEmptyLines: false })
         const rows = (parsed.data ?? []).filter(Array.isArray) as string[][]
-        const result = runParsers(file.name, rows)
-        entries.push(await processResult(result))
+        results.push({ result: runParsers(file.name, rows), fromCsv: true })
         continue
       }
       if (lower.endsWith('.xlsx') || lower.endsWith('.xls')) {
         const buf = await file.arrayBuffer()
         const wb = XLSX.read(buf, { type: 'array' })
+        const keys = workbookMonthKeys(file.name, wb.SheetNames)
         for (const sheetName of wb.SheetNames) {
+          const monthKey = keys.get(sheetName)
           // Template and summary tabs are blueprints, never real months.
-          if (/template|mall|summary|sammanst|översikt/i.test(sheetName) || !monthKeyForSheet(file.name, sheetName)) {
+          if (/templ|mall|summary|sammanst|översikt/i.test(sheetName) || !monthKey) {
             entries.push({
               file: file.name,
               sheet: sheetName,
@@ -121,8 +123,7 @@ export function FileDrop() {
             defval: '',
             raw: false,
           }) as string[][]
-          const result = runParsersOnSheet(file.name, sheetName, rows)
-          entries.push(await processResult(result))
+          results.push({ result: runParsersOnSheet(file.name, sheetName, rows, monthKey), fromCsv: false })
         }
         continue
       }
@@ -131,6 +132,19 @@ export function FileDrop() {
         status: 'skipped',
         reason: 'Unsupported file type (expected .csv, .xlsx or .xls)',
       })
+    }
+
+    // A one-tab CSV export of a month a workbook also holds would count twice.
+    const fromWorkbooks = new Set(
+      results.filter((r) => !r.fromCsv && r.result.status === 'ok').map((r) => (r.result as { monthKey: string }).monthKey),
+    )
+    const learned = learnBuckets(results.flatMap((r) => (r.result.status === 'ok' ? r.result.rows : [])))
+    for (const { result, fromCsv } of results) {
+      if (fromCsv && result.status === 'ok' && fromWorkbooks.has(result.monthKey)) {
+        entries.push({ file: result.file, status: 'skipped', reason: `${result.monthKey} already comes from a workbook` })
+        continue
+      }
+      entries.push(await processResult(result, learned))
     }
     setLog((prev) => [...entries, ...prev])
     setBusy(false)

@@ -3,9 +3,36 @@ export type CategoryRule = {
   savingsSlug?: 'investment' | 'travel' | 'emergency'
   category: string
   keywords: string[]
+  // Whole-name matches, for words too short to match safely inside other names.
+  exact?: string[]
+  // Wins over the column a sheet put the row in.
+  force?: boolean
 }
 
 export const RULES: CategoryRule[] = [
+  // Savings means money into the investment account only. Consumer credit paid
+  // clothes, electronics and travel, so it is a want even where a sheet filed it
+  // under "Savings / Loans". Student and car loans are fixed obligations.
+  {
+    bucket: 'wants',
+    category: 'credit',
+    force: true,
+    keywords: ['klarna', 'resursbank', 'qliro', 'supremecard', 'supreme card', 'anyfin'],
+  },
+  {
+    bucket: 'needs',
+    category: 'loans',
+    force: true,
+    keywords: ['csn', 'bil lån', 'billån', 'nordea (bil)', 'nordea bil'],
+  },
+  { bucket: 'needs', category: 'insurance', keywords: ['hemförsäkring', 'hedvig'] },
+  { bucket: 'needs', category: 'phone', keywords: ['abonemang', 'abonnemang'] },
+  { bucket: 'needs', category: 'utilities', keywords: ['ownit', 'comhem', 'com hem', 'godel', 'elpy'], exact: ['el', 'el avtal'] },
+  { bucket: 'needs', category: 'groceries', keywords: [], exact: ['mat'] },
+  { bucket: 'needs', category: 'unemployment insurance', keywords: ['a-kassa', 'akassa', 'saak', 'unionen'] },
+  { bucket: 'wants', category: 'fun money', keywords: ['dummheter'] },
+  { bucket: 'wants', category: 'gym', keywords: ['nordicwellness', 'nordic wellness', 'sats'] },
+  { bucket: 'wants', category: 'haircut', keywords: ['hair-cut', 'haircut', 'hair cut', 'frisör'] },
   { bucket: 'needs', category: 'rent', keywords: ['hyra', 'hyresrätt'] },
   {
     bucket: 'needs',

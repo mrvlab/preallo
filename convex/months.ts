@@ -1,5 +1,5 @@
 import { v } from 'convex/values'
-import { query } from './_generated/server'
+import { mutation, query } from './_generated/server'
 import { getUserFromIdentity } from './users'
 
 type Bucket = 'needs' | 'wants' | 'savings'
@@ -96,5 +96,61 @@ export const summary = query({
       goalAmt,
       pct,
     }
+  },
+})
+
+export const updateIncome = mutation({
+  args: { key: v.string(), income: v.number() },
+  returns: v.null(),
+  handler: async (ctx, { key, income }) => {
+    const userId = await getUserFromIdentity(ctx)
+    if (!userId) throw new Error('Not authenticated')
+    const month = await ctx.db
+      .query('months')
+      .withIndex('byUserKey', (q) => q.eq('userId', userId).eq('key', key))
+      .unique()
+    if (!month) throw new Error('Month not found')
+    await ctx.db.patch(month._id, { income })
+    return null
+  },
+})
+
+export const updateGoals = mutation({
+  args: {
+    key: v.string(),
+    goals: v.object({
+      needs: v.number(),
+      wants: v.number(),
+      savings: v.number(),
+    }),
+  },
+  returns: v.null(),
+  handler: async (ctx, { key, goals }) => {
+    const userId = await getUserFromIdentity(ctx)
+    if (!userId) throw new Error('Not authenticated')
+    const month = await ctx.db
+      .query('months')
+      .withIndex('byUserKey', (q) => q.eq('userId', userId).eq('key', key))
+      .unique()
+    if (!month) throw new Error('Month not found')
+    await ctx.db.patch(month._id, { goals })
+    return null
+  },
+})
+
+export const resetMonth = mutation({
+  args: { key: v.string() },
+  returns: v.null(),
+  handler: async (ctx, { key }) => {
+    const userId = await getUserFromIdentity(ctx)
+    if (!userId) throw new Error('Not authenticated')
+    const items = await ctx.db
+      .query('items')
+      .withIndex('byUserMonth', (q) =>
+        q.eq('userId', userId).eq('monthKey', key),
+      )
+      .collect()
+    for (const i of items) await ctx.db.delete(i._id)
+    return null
   },
 })

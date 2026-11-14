@@ -1,215 +1,390 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useMutation, useQuery } from 'convex/react'
+import { ArrowDownRight, ArrowRight, ArrowUpRight, ChevronLeft } from 'lucide-react'
 import { api } from '../../../../../convex/_generated/api'
-import { Slider } from '@/components/ui/slider'
-import { SectionCard } from '@/components/settings/section-card'
 import { propose, type Split } from '@/lib/analysis/propose'
-import { krw } from '@/lib/format'
+import { krNoDecimals } from '@/lib/format'
+import { BUCKET_LABELS, monthName, monthYear, type Bucket } from '@/lib/months'
+import { Bone } from '@/components/ui/skeleton-block'
+import { PrimaryButton } from '@/components/ui/modal'
+import { useToast } from '@/components/toast'
+import { cn } from '@/lib/utils'
 
-type Breakdown = Array<{
-  slug: string
-  label: string
-  percent: number
-  target?: number
-}>
+type Period = 'recent' | 'all'
+type Breakdown = Array<{ slug: string; label: string; percent: number; target?: number }>
+type Stats = { median: number; mean: number; p25: number; p75: number; trend: -1 | 0 | 1 }
 
-export default function DefaultSplitAnalysisPage() {
-  const analysis = useQuery(api.analysis.computeActualAverages)
+const BUCKETS: Bucket[] = ['needs', 'wants', 'savings']
+const card = 'rounded-[var(--radius-4)] bg-card px-6 py-[1.375rem] shadow-[inset_0_0_0_1px_var(--line)]'
+const pct = (v: number) => `${Math.round(v * 100)}%`
+const splitText = (s: Split) => `${s.needs} / ${s.wants} / ${s.savings}`
+const short = (key: string) => `${monthName(key).slice(0, 3)} ${monthYear(key)}`
+
+export default function DefaultSplitPage() {
+  const [period, setPeriod] = useState<Period>('recent')
+  const analysis = useQuery(api.analysis.computeActualAverages, { period })
   const me = useQuery(api.users.me)
-  const updateSplit = useMutation(api.users.updateDefaultSplit)
+  const save = useMutation(api.users.updateDefaultSplit)
+  const toast = useToast()
+  const router = useRouter()
 
+  const proposed = useMemo(
+    () => (analysis?.stats ? propose(analysis.stats, analysis.monthlySpend) : null),
+    [analysis],
+  )
   const [split, setSplit] = useState<Split | null>(null)
   const [breakdown, setBreakdown] = useState<Breakdown | null>(null)
 
-  const proposed = useMemo(() => {
-    if (!analysis?.stats) return null
-    return propose(analysis.stats, analysis.monthlySpend)
-  }, [analysis])
+  // A new period gives a new suggestion; drop any edits made to the old one.
+  useEffect(() => {
+    setSplit(null)
+    setBreakdown(null)
+  }, [period])
 
-  if (analysis === undefined || me === undefined) {
-    return (
-      <div className="mx-auto w-full max-w-2xl p-5 md:p-8">
-        <div className="h-8 w-40 animate-pulse rounded bg-[var(--p-06)]" />
-      </div>
-    )
-  }
+  const loading = analysis === undefined || me === undefined
+  const activeSplit = split ?? proposed?.split ?? null
+  const activeBreakdown = breakdown ?? proposed?.savingsBreakdown ?? null
 
-  if (!analysis || analysis.months < 6) {
-    return (
-      <div className="mx-auto w-full max-w-2xl p-5 md:p-8">
-        <h1 className="mb-2 text-[22px] font-semibold tracking-[-0.01em] text-[var(--text)]">
-          Default split
-        </h1>
-        <p className="text-sm text-[var(--muted-foreground)]">
-          This flow needs at least six imported months of history. Currently
-          imported: {analysis?.months ?? 0}. Head to{' '}
-          <a href="/import" className="text-[var(--brand-primary)] underline">
-            Import
-          </a>{' '}
-          and drop your CSVs.
-        </p>
-      </div>
-    )
-  }
-
-  const activeSplit = split ?? proposed!.split
-  const activeBreakdown = breakdown ?? proposed!.savingsBreakdown
-
-  async function save() {
-    await updateSplit({
-      split: activeSplit,
-      savingsBreakdown: activeBreakdown,
-    })
+  async function onSave() {
+    if (!activeSplit || !activeBreakdown) return
+    await save({ split: activeSplit, savingsBreakdown: activeBreakdown })
+    toast('Default split saved')
+    router.push('/settings')
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl p-5 md:p-8">
-      <h1 className="mb-2 text-[22px] font-semibold tracking-[-0.01em] text-[var(--text)]">
-        Default split
-      </h1>
-      <p className="mb-6 text-sm text-[var(--muted-foreground)]">
-        Based on {analysis.months} imported months. Adjust and save when ready.
-      </p>
-
-      <div className="flex flex-col gap-4">
-        <SectionCard title="Your history, at a glance">
-          {(['needs', 'wants', 'savings'] as const).map((b) => {
-            const s = analysis.stats![b]
-            return (
-              <div
-                key={b}
-                className="flex items-baseline justify-between border-b border-[var(--line)] py-2 last:border-b-0"
-              >
-                <div>
-                  <div
-                    className="text-sm font-medium capitalize"
-                    style={{ color: `var(--${b}-ink)` }}
-                  >
-                    {b}
-                  </div>
-                  <div className="text-xs text-[var(--muted-foreground)]">
-                    mean {Math.round(s.mean * 100)}%, p25–p75{' '}
-                    {Math.round(s.p25 * 100)}–{Math.round(s.p75 * 100)}%
-                  </div>
-                </div>
-                <div className="text-lg font-semibold tabular-nums">
-                  {Math.round(s.median * 100)}%
-                </div>
-              </div>
-            )
-          })}
-        </SectionCard>
-
-        <SectionCard title="Where your savings actually go">
-          {Object.entries(analysis.savingsStats!).map(([slug, s]) => (
-            <div
-              key={slug}
-              className="flex items-baseline justify-between border-b border-[var(--line)] py-2 last:border-b-0"
-            >
-              <div>
-                <div className="text-sm font-medium capitalize text-[var(--text)]">
-                  {slug}
-                </div>
-                <div className="text-xs text-[var(--muted-foreground)]">
-                  mean {Math.round(s.mean * 100)}%
-                </div>
-              </div>
-              <div className="text-lg font-semibold tabular-nums">
-                {Math.round(s.median * 100)}%
-              </div>
-            </div>
-          ))}
-        </SectionCard>
-
-        <SectionCard
-          title="Proposed default"
-          description="Nudged toward savings, grounded in your history."
-        >
-          {(['needs', 'wants', 'savings'] as const).map((k) => (
-            <div key={k} className="flex flex-col gap-2">
-              <div className="flex items-baseline justify-between text-sm">
-                <span
-                  className="capitalize"
-                  style={{ color: `var(--${k}-ink)` }}
-                >
-                  {k}
-                </span>
-                <span className="tabular-nums">{activeSplit[k]}%</span>
-              </div>
-              <Slider
-                value={[activeSplit[k]]}
-                min={0}
-                max={100}
-                step={5}
-                onValueChange={(v) => {
-                  const others = (['needs', 'wants', 'savings'] as const).filter(
-                    (x) => x !== k,
-                  )
-                  const otherSum = activeSplit[others[0]] + activeSplit[others[1]]
-                  const target = 100 - v[0]
-                  const next: Split = { ...activeSplit, [k]: v[0] }
-                  if (otherSum > 0) {
-                    others.forEach((o) => {
-                      next[o] = Math.round((activeSplit[o] / otherSum) * target)
-                    })
-                  } else {
-                    others.forEach((o) => (next[o] = Math.round(target / 2)))
-                  }
-                  const sum = next.needs + next.wants + next.savings
-                  if (sum !== 100) next[others[0]] += 100 - sum
-                  setSplit(next)
-                }}
-              />
-            </div>
-          ))}
-        </SectionCard>
-
-        <SectionCard
-          title="Proposed savings breakdown"
-          description={`Emergency caps at ${krw(analysis.monthlySpend * 3)}, then rolls into investment.`}
-        >
-          {activeBreakdown.map((b, i) => (
-            <div key={b.slug} className="flex flex-col gap-2">
-              <div className="flex items-baseline justify-between text-sm">
-                <span className="capitalize">{b.label}</span>
-                <span className="tabular-nums">{b.percent}%</span>
-              </div>
-              <Slider
-                value={[b.percent]}
-                min={0}
-                max={100}
-                step={5}
-                onValueChange={(v) => {
-                  const next = activeBreakdown.map((x, j) =>
-                    j === i ? { ...x, percent: v[0] } : x,
-                  )
-                  const total = next.reduce((a, x) => a + x.percent, 0)
-                  if (total !== 100 && next[0]) {
-                    const other = next.findIndex((_, j) => j !== i)
-                    if (other >= 0) next[other].percent += 100 - total
-                  }
-                  setBreakdown(next)
-                }}
-              />
-            </div>
-          ))}
-        </SectionCard>
-
+    <div className="px-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-32 lg:px-7 lg:pt-0">
+      <header className="flex flex-wrap items-center justify-between gap-3 py-4 lg:h-[4.875rem] lg:py-0 lg:pt-1">
         <div className="flex items-center gap-2">
-          <button
-            onClick={save}
-            className="h-10 rounded-[var(--radius-3)] bg-[var(--brand-primary)] px-5 text-sm font-medium text-white"
-          >
-            Save default
-          </button>
-          <a
+          <Link
             href="/settings"
-            className="h-10 rounded-[var(--radius-3)] px-4 text-sm leading-10 text-[var(--muted-foreground)]"
+            aria-label="Back to Settings"
+            className="grid size-9 place-items-center rounded-full text-[var(--text)] transition-colors duration-[120ms] hover:bg-[var(--p-06)]"
           >
-            Cancel
-          </a>
+            <ChevronLeft className="size-5" />
+          </Link>
+          <div>
+            <h1 className="text-[1.75rem] leading-tight font-bold tracking-[-0.01em] text-[var(--text)] lg:text-[2.1rem]">
+              Default split
+            </h1>
+            <p className="text-sm text-[var(--muted-foreground)]">
+              {analysis?.from && analysis.to
+                ? `From ${analysis.months} finished months, ${short(analysis.from)} to ${short(analysis.to)}.`
+                : 'From your finished months.'}
+            </p>
+          </div>
+        </div>
+        <div role="tablist" aria-label="Period" className="inline-flex rounded-[7px] bg-[var(--p-06)] p-[3px]">
+          {(
+            [
+              ['recent', 'Last 12 months'],
+              ['all', 'All history'],
+            ] as const
+          ).map(([k, label]) => (
+            <button
+              key={k}
+              role="tab"
+              aria-selected={period === k}
+              onClick={() => setPeriod(k)}
+              className={cn(
+                'h-7 rounded-[var(--radius-2)] px-3 text-sm transition-colors duration-[120ms]',
+                period === k
+                  ? 'bg-card font-medium text-[var(--text)] shadow-[0_1px_3px_rgba(0,0,0,.08),0_0_0_1px_var(--p-10)]'
+                  : 'text-[var(--muted-foreground)]',
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </header>
+
+      {loading ? (
+        <PageSkeleton />
+      ) : !analysis || analysis.months < 6 || !activeSplit || !activeBreakdown || !me ? (
+        <p className="max-w-xl text-sm text-[var(--muted-foreground)]">
+          This needs at least six finished months. You have {analysis?.finishedMonths ?? 0}.{' '}
+          <Link href="/import" className="text-[var(--brand-primary)] underline">
+            Import old sheets
+          </Link>{' '}
+          or come back after a few more months.
+        </p>
+      ) : (
+        <>
+          <section aria-label="Your history" className="grid gap-5 md:grid-cols-3">
+            {BUCKETS.map((b) => (
+              <HistoryCard key={b} bucket={b} stats={analysis.stats[b]} series={analysis.series.map((s) => s[b])} keys={analysis.series.map((s) => s.key)} />
+            ))}
+          </section>
+
+          <div className="mt-5 grid items-start gap-5 lg:grid-cols-[672fr_486fr]">
+            <ProposalCard
+              current={me.defaultSplit}
+              split={activeSplit}
+              onChange={setSplit}
+              overSalary={analysis.overSalary}
+              months={analysis.months}
+            />
+            <SavingsCard
+              savingsStats={analysis.savingsStats}
+              breakdown={activeBreakdown}
+              onChange={setBreakdown}
+              monthlySpend={analysis.monthlySpend}
+            />
+          </div>
+
+          <div className="fixed inset-x-4 bottom-[5.5rem] z-30 lg:sticky lg:inset-x-auto lg:bottom-5 lg:mt-5">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-4)] bg-card px-5 py-3.5 shadow-[var(--shadow-6)]">
+              <div className="flex items-center gap-2.5 text-sm text-[var(--muted-foreground)]">
+                <span>
+                  Now <b className="font-bold text-[var(--text)] tabular-nums">{splitText(me.defaultSplit)}</b>
+                </span>
+                <ArrowRight className="size-4" />
+                <span>
+                  Suggested <b className="font-bold text-[var(--text)] tabular-nums">{splitText(activeSplit)}</b>
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/settings"
+                  className="h-10 rounded-[var(--radius-3)] px-4 text-sm leading-10 font-semibold text-[var(--brand-primary)] hover:bg-[var(--p-04)]"
+                >
+                  Cancel
+                </Link>
+                <PrimaryButton onClick={onSave} className="w-auto px-5">
+                  Save default
+                </PrimaryButton>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+function HistoryCard({ bucket, stats, series, keys }: { bucket: Bucket; stats: Stats; series: number[]; keys: string[] }) {
+  const top = Math.max(...series, 0.01)
+  const Trend = stats.trend > 0 ? ArrowUpRight : stats.trend < 0 ? ArrowDownRight : ArrowRight
+  return (
+    <section className={cn(card, 'flex flex-col')}>
+      <div className="flex items-center justify-between">
+        <span className="flex items-center gap-2 text-sm font-semibold" style={{ color: `var(--${bucket}-ink)` }}>
+          <i className="size-2 rounded-full" style={{ background: `var(--${bucket})` }} />
+          {BUCKET_LABELS[bucket]}
+        </span>
+        <span className="flex items-center gap-1 text-xs font-medium text-[var(--muted-foreground)]">
+          <Trend className="size-3.5" />
+          {stats.trend > 0 ? 'Rising' : stats.trend < 0 ? 'Falling' : 'Steady'}
+        </span>
+      </div>
+      <div className="mt-2.5 text-[2.125rem] leading-none font-extrabold tracking-[-0.03em] text-[var(--text)] tabular-nums">
+        {pct(stats.median)}
+      </div>
+      <p className="mt-1.5 text-[0.8125rem] text-[var(--muted-foreground)]">
+        Median. Usually {pct(stats.p25)}–{pct(stats.p75)}, average {pct(stats.mean)}.
+      </p>
+      <div className="mt-4 flex h-12 items-end gap-1" aria-label={`${BUCKET_LABELS[bucket]} per month, last ${series.length} months`}>
+        {series.map((v, i) => (
+          <i
+            key={keys[i]}
+            title={`${short(keys[i])}: ${pct(v)}`}
+            className="block flex-1 rounded-[2px]"
+            style={{
+              height: `${Math.max(4, (v / top) * 100)}%`,
+              background: `var(--${bucket})`,
+              opacity: i === series.length - 1 ? 0.95 : 0.4,
+            }}
+          />
+        ))}
+      </div>
+      <div className="mt-1 flex justify-between text-[0.6875rem] text-[var(--muted-foreground)]">
+        <span>{keys[0] ? short(keys[0]) : ''}</span>
+        <span>{keys.at(-1) ? short(keys.at(-1)!) : ''}</span>
+      </div>
+    </section>
+  )
+}
+
+function SplitBar({ split, label }: { split: Split; label: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <span className="w-[4.5rem] shrink-0 text-xs font-medium text-[var(--muted-foreground)]">{label}</span>
+      <span className="flex h-2.5 flex-1 gap-0.5 overflow-hidden rounded-full">
+        {BUCKETS.map((b) => (
+          <i
+            key={b}
+            className="transition-[width] duration-500 ease-[cubic-bezier(.2,.8,.2,1)]"
+            style={{ width: `${split[b]}%`, background: `var(--${b})` }}
+          />
+        ))}
+      </span>
+      <span className="w-[5.5rem] shrink-0 text-right text-xs font-semibold text-[var(--text)] tabular-nums">{splitText(split)}</span>
+    </div>
+  )
+}
+
+function ProposalCard({
+  current,
+  split,
+  onChange,
+  overSalary,
+  months,
+}: {
+  current: Split
+  split: Split
+  onChange: (s: Split) => void
+  overSalary: number
+  months: number
+}) {
+  // Savings is what needs and wants leave, so the split always adds to 100.
+  function change(k: 'needs' | 'wants', v: number) {
+    const other = k === 'needs' ? split.wants : split.needs
+    const next = { ...split, [k]: Math.min(v, 100 - other) }
+    next.savings = 100 - next.needs - next.wants
+    onChange(next)
+  }
+  return (
+    <section className={card}>
+      <span className="block text-sm font-semibold text-[var(--muted-foreground)]">Proposed default</span>
+      <b className="mt-2.5 block text-[2.125rem] leading-none font-extrabold tracking-[-0.03em] text-[var(--text)] tabular-nums">
+        {splitText(split)}
+      </b>
+      <p className="mt-2 text-sm text-[var(--muted-foreground)]">
+        Nudged toward savings, grounded in what you actually spent. Adjust before saving.
+      </p>
+      <div className="mt-4 flex flex-col gap-2">
+        <SplitBar label="Now" split={current} />
+        <SplitBar label="Suggested" split={split} />
+      </div>
+      <div className="mt-4">
+        {BUCKETS.map((b) => (
+          <div key={b}>
+            <div className="mt-1.5 flex items-center justify-between">
+              <span className="flex items-center gap-2 text-sm font-medium text-[var(--text)]">
+                <i className="size-2 rounded-full" style={{ background: `var(--${b})` }} />
+                {BUCKET_LABELS[b]}
+              </span>
+              <small className="text-xs font-semibold text-[var(--muted-foreground)] tabular-nums">{split[b]}%</small>
+            </div>
+            {b !== 'savings' && (
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={split[b]}
+                aria-label={`${BUCKET_LABELS[b]} suggested`}
+                onChange={(e) => change(b, Number(e.target.value))}
+                className="h-10 w-full accent-[var(--brand-primary)]"
+              />
+            )}
+          </div>
+        ))}
+      </div>
+      {overSalary > 0 && (
+        <p className="mt-3 rounded-[var(--radius-2)] bg-[var(--needs-soft)] px-3 py-2 text-[0.8125rem] text-[var(--needs-ink)]">
+          You spent more than your salary in {overSalary} of these {months} months. A split only holds if the
+          months stay within the salary.
+        </p>
+      )}
+    </section>
+  )
+}
+
+function SavingsCard({
+  savingsStats,
+  breakdown,
+  onChange,
+  monthlySpend,
+}: {
+  savingsStats: Record<string, Stats>
+  breakdown: Breakdown
+  onChange: (b: Breakdown) => void
+  monthlySpend: number
+}) {
+  // Emergency takes what investment and travel leave.
+  function change(slug: string, v: number) {
+    const inv = breakdown.find((x) => x.slug === 'investment')!.percent
+    const trv = breakdown.find((x) => x.slug === 'travel')!.percent
+    const nextInv = slug === 'investment' ? Math.min(v, 100 - trv) : inv
+    const nextTrv = slug === 'travel' ? Math.min(v, 100 - inv) : trv
+    onChange(
+      breakdown.map((x) =>
+        x.slug === 'investment'
+          ? { ...x, percent: nextInv }
+          : x.slug === 'travel'
+            ? { ...x, percent: nextTrv }
+            : { ...x, percent: 100 - nextInv - nextTrv },
+      ),
+    )
+  }
+  return (
+    <section className={card}>
+      <span className="block text-sm font-semibold text-[var(--muted-foreground)]">Proposed savings breakdown</span>
+      <p className="mt-1 text-sm text-[var(--muted-foreground)]">Share of the savings bucket, and where it went so far.</p>
+      <div className="mt-3">
+        {breakdown.map((x) => (
+          <div key={x.slug}>
+            <div className="mt-1.5 flex items-center justify-between gap-3">
+              <span className="text-sm font-medium text-[var(--text)]">{x.label}</span>
+              <small className="text-xs font-semibold text-[var(--muted-foreground)] tabular-nums">
+                {x.percent}% · so far {pct(savingsStats[x.slug]?.mean ?? 0)} of salary
+              </small>
+            </div>
+            {x.slug !== 'emergency' ? (
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={x.percent}
+                aria-label={`${x.label} share`}
+                onChange={(e) => change(x.slug, Number(e.target.value))}
+                className="h-10 w-full accent-[var(--brand-primary)]"
+              />
+            ) : (
+              <p className="mt-1 text-xs text-[var(--muted-foreground)]">
+                Caps at 3x monthly spend ({krNoDecimals(monthlySpend * 3)} kr), then rolls into investment.
+              </p>
+            )}
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function PageSkeleton() {
+  return (
+    <div aria-busy="true" aria-label="Loading analysis">
+      <div className="grid gap-5 md:grid-cols-3">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className={cn(card, 'flex flex-col gap-2.5')}>
+            <Bone className="h-3.5 w-20" shade="mid" />
+            <Bone className="h-[2.125rem] w-24" shade="strong" />
+            <Bone className="h-3 w-48" shade="soft" />
+            <div className="mt-2 flex h-12 items-end gap-1">
+              {Array.from({ length: 12 }, (_, j) => (
+                <Bone key={j} className={cn('flex-1', ['h-[40%]', 'h-[70%]', 'h-[55%]'][j % 3])} shade="soft" />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-5 grid gap-5 lg:grid-cols-[672fr_486fr]">
+        <div className={cn(card, 'flex min-h-[22rem] flex-col gap-3')}>
+          <Bone className="h-3.5 w-32" shade="soft" />
+          <Bone className="h-[2.125rem] w-40" shade="strong" />
+          <Bone className="h-2.5 w-full" shade="mid" />
+          <Bone className="h-2.5 w-full" shade="mid" />
+        </div>
+        <div className={cn(card, 'flex min-h-[16rem] flex-col gap-3')}>
+          <Bone className="h-3.5 w-40" shade="soft" />
+          <Bone className="h-3 w-full" shade="line" />
+          <Bone className="h-3 w-3/4" shade="line" />
         </div>
       </div>
     </div>

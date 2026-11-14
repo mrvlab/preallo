@@ -1,6 +1,6 @@
 'use client'
 
-import { useQuery } from 'convex/react'
+import { useQuery } from '@/lib/use-query'
 import { api } from '../../../../convex/_generated/api'
 import { HeroCard } from '@/components/overview/hero-card'
 import { BucketCard } from '@/components/overview/bucket-card'
@@ -14,7 +14,7 @@ import type { Bucket } from '@/lib/months'
 const BUCKETS: Bucket[] = ['needs', 'wants', 'savings']
 
 export default function OverviewPage() {
-  const { monthKey: key } = useMonth()
+  const { monthKey: key, ready } = useMonth()
   const summary = useQuery(api.months.summary, { key })
   const items = useQuery(api.items.listForMonth, { monthKey: key })
   const needs = useQuery(api.months.bucketHistory, { key, bucket: 'needs', months: 3 })
@@ -22,7 +22,7 @@ export default function OverviewPage() {
   const savings = useQuery(api.months.bucketHistory, { key, bucket: 'savings', months: 3 })
   const history = { needs, wants, savings }
 
-  const loading = summary === undefined || items === undefined
+  const loading = !ready || summary === undefined || items === undefined
 
   return (
     <>

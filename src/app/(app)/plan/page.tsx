@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { useQuery } from 'convex/react'
+import { useQuery } from '@/lib/use-query'
 import { Check, Lock, Plus } from 'lucide-react'
 import { api } from '../../../../convex/_generated/api'
 import { BucketChip } from '@/components/plan/bucket-chip'
@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils'
 const BUCKETS: Bucket[] = ['needs', 'wants', 'savings']
 
 export default function PlanPage() {
-  const { monthKey: key, editable } = useMonth()
+  const { monthKey: key, editable, ready } = useMonth()
   const { openItem } = useModals()
   const summary = useQuery(api.months.summary, { key })
   const items = useQuery(api.items.listForMonth, { monthKey: key })
@@ -41,7 +41,7 @@ export default function PlanPage() {
     return map
   }, [items])
 
-  const loading = summary === undefined || items === undefined
+  const loading = !ready || summary === undefined || items === undefined
   const activeItems = (items ?? []).filter((i) => i.bucket === active)
   const history = (txns ?? []).filter((t) => t.bucket === active && t.amount < 0)
   const totals = summary?.fromHistory ? summary.totals : perBucket

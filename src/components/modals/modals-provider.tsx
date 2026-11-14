@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, ReactNode, useContext, useMemo, useState } from 'react'
-import { useQuery } from 'convex/react'
+import { useQuery } from '@/lib/use-query'
 import { api } from '../../../convex/_generated/api'
 import { useMonth } from '@/components/month-context'
 import { ItemModal, type ItemTarget } from './item-modal'

@@ -27,16 +27,22 @@ function usePrefersReducedMotion() {
 
 export function GoalsRings({ size = 170, pct, goals }: Props) {
   const reduced = usePrefersReducedMotion()
-  const [playing, setPlaying] = useState(false)
+  // 'reset' snaps the arcs to zero with no transition, then two frames later 'play' draws them in.
+  // Runs on every mount, including when a cached page is shown again after switching tabs.
+  const [phase, setPhase] = useState<'reset' | 'play'>('reset')
   useEffect(() => {
     if (reduced) {
-      setPlaying(true)
+      setPhase('play')
       return
     }
-    setPlaying(false)
-    const t = window.setTimeout(() => setPlaying(true), 20)
-    return () => window.clearTimeout(t)
+    setPhase('reset')
+    let raf = requestAnimationFrame(() => {
+      raf = requestAnimationFrame(() => setPhase('play'))
+    })
+    return () => cancelAnimationFrame(raf)
   }, [reduced, pct.needs, pct.wants, pct.savings])
+  const playing = phase === 'play'
+  const animate = playing && !reduced
   // Proportions from the Figma ring: stroke 11.1% of the size, 3.7% between rings.
   const CX = size / 2
   const SW = size * 0.111
@@ -85,9 +91,7 @@ export function GoalsRings({ size = 170, pct, goals }: Props) {
                   strokeLinecap="round"
                   strokeDasharray={`${playing ? main : 0} ${Cc}`}
                   style={{
-                    transition: reduced
-                      ? 'none'
-                      : 'stroke-dasharray 900ms cubic-bezier(.2,.8,.2,1)',
+                    transition: animate ? 'stroke-dasharray 900ms cubic-bezier(.2,.8,.2,1)' : 'none',
                   }}
                 />
               )}
@@ -102,9 +106,7 @@ export function GoalsRings({ size = 170, pct, goals }: Props) {
                   strokeLinecap="round"
                   strokeDasharray={`${playing ? lapLen : 0} ${Cc}`}
                   style={{
-                    transition: reduced
-                      ? 'none'
-                      : 'stroke-dasharray 900ms cubic-bezier(.2,.8,.2,1) 200ms',
+                    transition: animate ? 'stroke-dasharray 900ms cubic-bezier(.2,.8,.2,1) 200ms' : 'none',
                   }}
                 />
               )}

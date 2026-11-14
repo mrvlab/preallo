@@ -3,7 +3,7 @@
 import { ReactNode, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useQuery } from 'convex/react'
+import { useQuery } from '@/lib/use-query'
 import { UserButton, useUser } from '@clerk/nextjs'
 import { Clock, ListChecks, Lock, Plus, SlidersHorizontal } from 'lucide-react'
 import { api } from '../../convex/_generated/api'
@@ -13,6 +13,7 @@ import { ModalsProvider, useModals } from '@/components/modals/modals-provider'
 import { ToastProvider } from '@/components/toast'
 import { currentMonthKey, isEditable, monthName, monthYear } from '@/lib/months'
 import { cn } from '@/lib/utils'
+import { Bone } from '@/components/ui/skeleton-block'
 
 const nav = [
   { href: '/overview', label: 'Overview', Icon: Clock },
@@ -37,7 +38,7 @@ function Shell({ children }: { children: ReactNode }) {
   const path = usePathname() ?? '/'
   const { user } = useUser()
   const me = useQuery(api.users.me)
-  const displayName = me?.name || user?.firstName || user?.fullName || 'Account'
+  const displayName = me === undefined ? null : me?.name || user?.firstName || user?.fullName || 'Account'
   const isActive = (href: string) => path === href || path.startsWith(href + '/')
 
   return (
@@ -71,8 +72,15 @@ function Shell({ children }: { children: ReactNode }) {
         </div>
         <div className="mt-3 flex h-8 shrink-0 items-center justify-between gap-2 px-2">
           <div className="flex min-w-0 items-center gap-2.5">
-            <UserButton appearance={{ elements: { userButtonAvatarBox: 'size-[1.4rem]' } }} />
-            <span className="truncate text-sm text-[var(--text)]">{displayName}</span>
+            {/* Fixed box so Clerk's avatar loading in late does not shift the name. */}
+            <span className="grid size-[1.4rem] shrink-0 place-items-center overflow-hidden rounded-full bg-[var(--p-06)]">
+              <UserButton appearance={{ elements: { userButtonAvatarBox: 'size-[1.4rem]' } }} />
+            </span>
+            {displayName === null ? (
+              <Bone className="h-3.5 w-24" shade="soft" />
+            ) : (
+              <span className="truncate text-sm text-[var(--text)]">{displayName}</span>
+            )}
           </div>
           <Link
             href="/settings"
@@ -114,8 +122,9 @@ function Shell({ children }: { children: ReactNode }) {
 }
 
 function MonthsNav() {
-  const months = useQuery(api.months.listForUser) ?? []
-  const { monthKey, setMonthKey } = useMonth()
+  const loaded = useQuery(api.months.listForUser)
+  const months = loaded ?? []
+  const { monthKey, ready, setMonthKey } = useMonth()
   const { startMonth } = useModals()
   const [showAll, setShowAll] = useState(false)
   const today = currentMonthKey()
@@ -135,8 +144,15 @@ function MonthsNav() {
       </div>
       {/* Padding inside the scroll box so focus outlines are not clipped by its overflow. */}
       <ul className="-m-1 flex min-h-0 flex-col overflow-y-auto p-1">
+        {loaded === undefined &&
+          [0, 1, 2, 3, 4].map((i) => (
+            <li key={i} className="flex h-10 items-center gap-2.5 px-3">
+              <Bone className="size-[0.59rem] rounded-full" shade="soft" />
+              <Bone className="h-3.5 w-28" shade="soft" />
+            </li>
+          ))}
         {shown.map((m) => {
-          const active = m.key === monthKey
+          const active = ready && m.key === monthKey
           const locked = !isEditable(m.key, today)
           const future = m.key > today
           return (

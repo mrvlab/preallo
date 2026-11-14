@@ -2,7 +2,8 @@
 
 import { ReactNode, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useMutation, useQuery } from 'convex/react'
+import { useMutation } from 'convex/react'
+import { useQuery } from '@/lib/use-query'
 import { SignOutButton, useUser } from '@clerk/nextjs'
 import { ChevronRight, LogOut } from 'lucide-react'
 import { api } from '../../../../convex/_generated/api'
@@ -23,12 +24,12 @@ const kr2 = (n: number) =>
   `${new Intl.NumberFormat('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)} kr`
 
 export default function SettingsPage() {
-  const { monthKey: key, editable } = useMonth()
+  const { monthKey: key, editable, ready } = useMonth()
   const { openGoals, openDefaultSalary } = useModals()
   const me = useQuery(api.users.me)
   const summary = useQuery(api.months.summary, { key })
   const months = useQuery(api.months.listForUser)
-  const loading = me === undefined || summary === undefined
+  const loading = !ready || me === undefined || summary === undefined
   const imported = (months ?? []).filter((m) => m.imported).length
   const name = monthName(key)
 

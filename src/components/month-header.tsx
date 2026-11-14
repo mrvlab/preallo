@@ -1,14 +1,15 @@
 'use client'
 
-import { useQuery } from 'convex/react'
+import { useQuery } from '@/lib/use-query'
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { api } from '../../convex/_generated/api'
 import { useMonth } from '@/components/month-context'
 import { useModals } from '@/components/modals/modals-provider'
 import { monthName, monthYear } from '@/lib/months'
+import { Bone } from '@/components/ui/skeleton-block'
 
 export function MonthHeader() {
-  const { monthKey, setMonthKey } = useMonth()
+  const { monthKey, ready, setMonthKey } = useMonth()
   const { openPicker, startMonth } = useModals()
   const months = useQuery(api.months.listForUser) ?? []
   const keys = months.map((m) => m.key).sort()
@@ -30,12 +31,18 @@ export function MonthHeader() {
             onClick={openPicker}
             className="-mx-2 flex items-baseline gap-3 rounded-[var(--radius-3)] px-2 transition-colors duration-[120ms] hover:bg-[var(--p-06)]"
           >
-            <span className="text-[2.1rem] leading-tight font-bold tracking-[-0.03em] text-[var(--text)]">
-              {monthName(monthKey)}
-            </span>
-            <span className="text-[1.25rem] font-medium text-[var(--muted-foreground)]">
-              {monthYear(monthKey)}
-            </span>
+            {ready ? (
+              <>
+                <span className="text-[2.1rem] leading-tight font-bold tracking-[-0.03em] text-[var(--text)]">
+                  {monthName(monthKey)}
+                </span>
+                <span className="text-[1.25rem] font-medium text-[var(--muted-foreground)]">
+                  {monthYear(monthKey)}
+                </span>
+              </>
+            ) : (
+              <Bone className="my-1.5 h-8 w-52" shade="strong" />
+            )}
           </button>
         </h1>
       </header>
@@ -50,10 +57,16 @@ export function MonthHeader() {
               onClick={openPicker}
               className="-mx-2 block rounded-[var(--radius-3)] px-2 py-0.5 text-left transition-colors duration-[120ms] hover:bg-[var(--p-06)]"
             >
-              <span className="text-[1.375rem] leading-tight font-bold tracking-[-0.03em] text-[var(--text)]">
-                {monthName(monthKey)}
-              </span>
-              <span className="ml-2 text-sm font-bold text-[var(--muted-foreground)]">{monthYear(monthKey)}</span>
+              {ready ? (
+                <>
+                  <span className="text-[1.375rem] leading-tight font-bold tracking-[-0.03em] text-[var(--text)]">
+                    {monthName(monthKey)}
+                  </span>
+                  <span className="ml-2 text-sm font-bold text-[var(--muted-foreground)]">{monthYear(monthKey)}</span>
+                </>
+              ) : (
+                <Bone className="my-1 h-6 w-36" shade="strong" />
+              )}
             </button>
           </h1>
           <IconBtn

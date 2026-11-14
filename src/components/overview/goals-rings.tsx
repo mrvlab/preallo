@@ -102,8 +102,6 @@ export function GoalsRings({ size = 170, pct, goals }: Props) {
                   strokeLinecap="round"
                   strokeDasharray={`${playing ? lapLen : 0} ${Cc}`}
                   style={{
-                    // Same darkening as the prototype, so the lap stays a shade of the ring in both themes.
-                    filter: 'brightness(.68) saturate(1.15)',
                     transition: reduced
                       ? 'none'
                       : 'stroke-dasharray 900ms cubic-bezier(.2,.8,.2,1) 200ms',

@@ -20,9 +20,9 @@ export function GoalsRingCard({ pct, goals }: { pct: Totals; goals: Goals }) {
         : "Needs or Wants is past its goal. Trim it in Plan.";
 
   return (
-    <section className="@container rounded-[var(--radius-4)] bg-card px-5 py-5 shadow-[inset_0_0_0_1px_var(--line)] lg:min-h-[15.5rem] lg:px-7 lg:py-[1.65rem]">
+    <section className="@container flex items-center rounded-[var(--radius-4)] bg-card px-5 py-5 shadow-[inset_0_0_0_1px_var(--line)] lg:min-h-[15.5rem] lg:px-7 lg:py-[1.65rem]">
       {/* Ring beside the text once the card has room, above it when the column is narrow. */}
-      <div className="flex h-full flex-col items-center gap-4 text-center @min-[19rem]:flex-row @min-[19rem]:gap-5 @min-[19rem]:text-left @min-[28rem]:gap-6">
+      <div className="flex w-full flex-col items-center gap-4 text-center @min-[19rem]:flex-row @min-[19rem]:gap-5 @min-[19rem]:text-left @min-[28rem]:gap-6">
         <div className="shrink-0">
           <span className="hidden @min-[28rem]:block">
             <GoalsRings size={195} pct={pct} goals={goals} />

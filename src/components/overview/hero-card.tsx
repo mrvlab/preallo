@@ -43,7 +43,7 @@ export function HeroCard({ monthKey, free, income, reserved, missingCount, paid,
     : past
       ? view === 'week'
         ? `a week, ${name} had ${weeks} weeks`
-        : `${name} is closed`
+        : `${name} has ended`
       : future
         ? `for ${name}, not started yet`
         : view === 'week'

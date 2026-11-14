@@ -31,3 +31,30 @@ export function Bone({
     />
   )
 }
+
+// A bone that takes its height from real typography: pass the same text classes as the
+// content it stands in for, and the line box matches it exactly. Width is in em of that text.
+export function TextBone({
+  className,
+  w,
+  shade = 'mid',
+}: {
+  className?: string
+  w: string
+  shade?: Shade
+}) {
+  return (
+    <span aria-hidden="true" className={cn('block', className)}>
+      <span
+        className={cn(
+          // Top-aligned and nudged with relative positioning so the bone never grows the line box.
+          'relative top-[calc((1lh-1em)/2)] inline-block h-[1em] max-w-full rounded-[var(--radius-1)] align-top text-transparent select-none motion-safe:animate-pulse',
+          SHADES[shade],
+        )}
+        style={{ width: w }}
+      >
+        &#8203;
+      </span>
+    </span>
+  )
+}

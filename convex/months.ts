@@ -315,3 +315,46 @@ export const resetMonth = mutation({
     return null
   },
 })
+
+// An imported month that is still inside the edit window becomes an ordinary plan: each
+// bucketed sheet row turns into a paid item. Rows without a bucket stay in the review queue.
+export const adoptImported = mutation({
+  args: { key: v.string() },
+  returns: v.number(),
+  handler: async (ctx, { key }) => {
+    const userId = await getUserFromIdentity(ctx)
+    if (!userId) throw new Error('Not authenticated')
+    assertEditable(key)
+    const month = await ctx.db
+      .query('months')
+      .withIndex('byUserKey', (q) => q.eq('userId', userId).eq('key', key))
+      .unique()
+    if (!month?.imported) return 0
+    const existing = await ctx.db
+      .query('items')
+      .withIndex('byUserMonth', (q) => q.eq('userId', userId).eq('monthKey', key))
+      .first()
+    if (existing) return 0
+    const txns = await ctx.db
+      .query('transactions')
+      .withIndex('byUserMonth', (q) => q.eq('userId', userId).eq('monthKey', key))
+      .collect()
+    let made = 0
+    for (const t of txns) {
+      if (t.amount >= 0 || !t.bucket || !(BUCKETS as string[]).includes(t.bucket)) continue
+      await ctx.db.insert('items', {
+        userId,
+        monthKey: key,
+        bucket: t.bucket,
+        savingsSlug: t.savingsSlug,
+        name: t.description,
+        category: t.category,
+        amount: Math.abs(t.amount),
+        paid: true,
+        locked: false,
+      })
+      made++
+    }
+    return made
+  },
+})

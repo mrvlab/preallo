@@ -9,7 +9,7 @@ import { ComingUp } from '@/components/overview/coming-up'
 import { OverviewSkeleton } from '@/components/overview/overview-skeleton'
 import { MonthHeader } from '@/components/month-header'
 import { useMonth } from '@/components/month-context'
-import type { Bucket } from '@/lib/months'
+import { currentMonthKey, type Bucket } from '@/lib/months'
 
 const BUCKETS: Bucket[] = ['needs', 'wants', 'savings']
 
@@ -22,6 +22,7 @@ export default function OverviewPage() {
   const savings = useQuery(api.months.bucketHistory, { key, bucket: 'savings', months: 3 })
   const history = { needs, wants, savings }
 
+  const finished = !!summary && (summary.fromHistory || key < currentMonthKey())
   const loading = !ready || summary === undefined || items === undefined
 
   return (
@@ -39,11 +40,11 @@ export default function OverviewPage() {
             <div className="contents @min-[60rem]/main:flex @min-[60rem]/main:flex-col @min-[60rem]/main:gap-6">
               <HeroCard
                 monthKey={key}
-                // Imported months are finished: what is left is salary minus everything spent,
-                // not salary minus fixed costs as while planning.
-                free={summary.fromHistory ? summary.left : summary.free}
+                // Finished months (imported, or before this month) show salary minus everything
+                // spent, not salary minus fixed costs as while planning.
+                free={finished ? summary.left : summary.free}
                 income={summary.income}
-                reserved={summary.fromHistory ? summary.income - summary.left : summary.reserved}
+                reserved={finished ? summary.income - summary.left : summary.reserved}
                 missingCount={summary.missing}
                 paid={summary.paid}
                 payable={summary.payable}

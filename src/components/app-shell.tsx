@@ -14,6 +14,7 @@ import { ToastProvider } from '@/components/toast'
 import { currentMonthKey, isEditable, monthName, monthYear } from '@/lib/months'
 import { cn } from '@/lib/utils'
 import { Bone } from '@/components/ui/skeleton-block'
+import { AdoptImported } from '@/components/adopt-imported'
 
 const nav = [
   { href: '/overview', label: 'Overview', Icon: Clock },
@@ -27,6 +28,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <MonthProvider>
       <ToastProvider>
         <ModalsProvider>
+          <AdoptImported />
           <Shell>{children}</Shell>
         </ModalsProvider>
       </ToastProvider>

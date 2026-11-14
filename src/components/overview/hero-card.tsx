@@ -1,6 +1,7 @@
 'use client'
 
 import { krw, daysLeftInMonth, weeksLeft } from '@/lib/format'
+import { RollingDigits } from '@/components/motion/rolling-digits'
 
 type Props = {
   free: number
@@ -22,7 +23,7 @@ export function HeroCard({ free, income, reserved }: Props) {
         className={`font-semibold leading-none tracking-[-0.03em] tabular-nums ${neg ? 'text-[var(--warn)]' : 'text-[var(--text)]'}`}
         style={{ fontSize: 52 }}
       >
-        {krw(free)}
+        <RollingDigits value={krw(free)} />
       </div>
       <div className="text-sm text-[var(--muted-foreground)]">
         {krw(perWeek)}{' '}

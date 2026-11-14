@@ -1,6 +1,7 @@
 'use client'
 
 import { krw } from '@/lib/format'
+import { RollingDigits } from '@/components/motion/rolling-digits'
 
 type Item = {
   _id: string
@@ -27,7 +28,7 @@ export function ComingUp({ items }: Props) {
           COMING UP
         </div>
         <div className="text-sm font-semibold tabular-nums text-[var(--text)]">
-          {krw(total)}
+          <RollingDigits value={krw(total)} />
         </div>
       </div>
       {unpaid.length === 0 ? (

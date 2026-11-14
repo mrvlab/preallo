@@ -1,5 +1,7 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+
 type Goals = { needs: number; wants: number; savings: number }
 type Totals = { needs: number; wants: number; savings: number }
 
@@ -11,7 +13,30 @@ type Props = {
   goals: Goals
 }
 
+function usePrefersReducedMotion() {
+  const [reduced, setReduced] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setReduced(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setReduced(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+  return reduced
+}
+
 export function GoalsRings({ size = 170, pct, goals }: Props) {
+  const reduced = usePrefersReducedMotion()
+  const [playing, setPlaying] = useState(false)
+  useEffect(() => {
+    if (reduced) {
+      setPlaying(true)
+      return
+    }
+    setPlaying(false)
+    const t = window.setTimeout(() => setPlaying(true), 20)
+    return () => window.clearTimeout(t)
+  }, [reduced, pct.needs, pct.wants, pct.savings])
   const CX = size / 2
   const SW = size * 0.085
   const GAP = size * 0.02
@@ -64,7 +89,12 @@ export function GoalsRings({ size = 170, pct, goals }: Props) {
                   stroke={`var(--${k})`}
                   strokeWidth={SW}
                   strokeLinecap="round"
-                  strokeDasharray={`${main} ${Cc}`}
+                  strokeDasharray={`${playing ? main : 0} ${Cc}`}
+                  style={{
+                    transition: reduced
+                      ? 'none'
+                      : 'stroke-dasharray 900ms cubic-bezier(.2,.8,.2,1)',
+                  }}
                 />
               )}
               {lapLen > 0.5 && (
@@ -76,7 +106,12 @@ export function GoalsRings({ size = 170, pct, goals }: Props) {
                   stroke={`var(--${k}-ink)`}
                   strokeWidth={SW}
                   strokeLinecap="round"
-                  strokeDasharray={`${lapLen} ${Cc}`}
+                  strokeDasharray={`${playing ? lapLen : 0} ${Cc}`}
+                  style={{
+                    transition: reduced
+                      ? 'none'
+                      : 'stroke-dasharray 900ms cubic-bezier(.2,.8,.2,1) 200ms',
+                  }}
                 />
               )}
             </g>

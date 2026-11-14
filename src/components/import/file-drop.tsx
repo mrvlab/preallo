@@ -13,6 +13,7 @@ import {
   type SheetParseResult,
 } from '@/lib/parsers/registry'
 import { classify, learnBuckets, type LearnedBuckets } from '@/lib/categorise/apply'
+import { categoryFor } from '@/lib/categorise/category'
 import { workbookMonthKeys } from '@/lib/parsers/types'
 import { api } from '../../../convex/_generated/api'
 
@@ -58,7 +59,8 @@ export function FileDrop() {
         source: r.source,
         bucket: c.bucket,
         savingsSlug: c.savingsSlug,
-        category: c.category,
+        // Salary keeps its marker; every other row gets one of the app's categories.
+        category: r.kind === 'income' ? c.category : categoryFor(r.description, c.bucket),
         confidence: c.confidence,
         needsReview: c.needsReview,
       }

@@ -9,6 +9,7 @@
  */
 
 import type * as analysis from "../analysis.js";
+import type * as categories from "../categories.js";
 import type * as demo from "../demo.js";
 import type * as editable from "../editable.js";
 import type * as items from "../items.js";
@@ -24,6 +25,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   analysis: typeof analysis;
+  categories: typeof categories;
   demo: typeof demo;
   editable: typeof editable;
   items: typeof items;

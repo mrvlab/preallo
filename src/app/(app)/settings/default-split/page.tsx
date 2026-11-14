@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useMutation } from 'convex/react'
@@ -14,6 +14,7 @@ import { Bone } from '@/components/ui/skeleton-block'
 import { PrimaryButton } from '@/components/ui/modal'
 import { useToast } from '@/components/toast'
 import { cn } from '@/lib/utils'
+import { Segmented } from '@/components/ui/segmented'
 
 type Period = 'recent' | 'all'
 type Breakdown = Array<{ slug: string; label: string; percent: number; target?: number }>
@@ -41,10 +42,11 @@ export default function DefaultSplitPage() {
   const [breakdown, setBreakdown] = useState<Breakdown | null>(null)
 
   // A new period gives a new suggestion; drop any edits made to the old one.
-  useEffect(() => {
+  function changePeriod(next: Period) {
+    setPeriod(next)
     setSplit(null)
     setBreakdown(null)
-  }, [period])
+  }
 
   const loading = analysis === undefined || me === undefined
   const activeSplit = split ?? proposed?.split ?? null
@@ -79,29 +81,15 @@ export default function DefaultSplitPage() {
             </p>
           </div>
         </div>
-        <div role="tablist" aria-label="Period" className="inline-flex rounded-[7px] bg-[var(--p-06)] p-[3px]">
-          {(
-            [
-              ['recent', 'Last 12 months'],
-              ['all', 'All history'],
-            ] as const
-          ).map(([k, label]) => (
-            <button
-              key={k}
-              role="tab"
-              aria-selected={period === k}
-              onClick={() => setPeriod(k)}
-              className={cn(
-                'h-7 rounded-[var(--radius-2)] px-3 text-sm transition-colors duration-[120ms]',
-                period === k
-                  ? 'bg-card font-medium text-[var(--text)] shadow-[0_1px_3px_rgba(0,0,0,.08),0_0_0_1px_var(--p-10)]'
-                  : 'text-[var(--muted-foreground)]',
-              )}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+        <Segmented
+          label="Period"
+          value={period}
+          onChange={changePeriod}
+          options={[
+            { value: 'recent', label: 'Last 12 months' },
+            { value: 'all', label: 'All history' },
+          ]}
+        />
       </header>
 
       {loading ? (

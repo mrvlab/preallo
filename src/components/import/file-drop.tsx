@@ -1,6 +1,8 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import { cn } from '@/lib/utils'
+import { cardClass, cardLabelClass } from '@/components/ui/card-classes'
 import Papa from 'papaparse'
 import * as XLSX from 'xlsx'
 import { useMutation } from 'convex/react'
@@ -31,6 +33,7 @@ export function FileDrop() {
   const ensureMonth = useMutation(api.months.ensureImportedMonth)
   const inputRef = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
+  const [over, setOver] = useState(false)
   const [log, setLog] = useState<LogEntry[]>([])
 
   async function processResult(result: SheetParseResult, learned: LearnedBuckets): Promise<LogEntry> {
@@ -151,47 +154,55 @@ export function FileDrop() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={(e) => {
-          e.preventDefault()
-          if (e.dataTransfer.files) handleFiles(e.dataTransfer.files)
-        }}
-        className="flex flex-col items-center gap-2 rounded-[var(--radius-4)] border border-dashed border-[var(--p-16)] bg-[var(--p-04)] p-10 text-center"
-      >
-        <Upload size={28} className="text-[var(--muted-foreground)]" />
-        <p className="text-sm text-[var(--text)]">
-          Drop one or more CSV or XLSX files here
+    <div className="flex flex-col gap-5">
+      <section className={cardClass}>
+        <span className={cardLabelClass}>Add sheets</span>
+        <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+          Workbooks import every month tab (Januari, Feb 24, OCT26). Template tabs are skipped. A CSV counts as one
+          month.
         </p>
-        <p className="text-xs text-[var(--muted-foreground)]">
-          Workbooks import every month tab (Januari, Feb 24, OCT26). Template tabs are skipped. A CSV counts as one month.
-        </p>
-        <button
-          disabled={busy}
-          onClick={() => inputRef.current?.click()}
-          className="mt-3 h-9 rounded-[var(--radius-3)] bg-[var(--brand-primary)] px-4 text-sm text-white disabled:opacity-50"
+        <div
+          onDragOver={(e) => {
+            e.preventDefault()
+            setOver(true)
+          }}
+          onDragLeave={() => setOver(false)}
+          onDrop={(e) => {
+            e.preventDefault()
+            setOver(false)
+            if (e.dataTransfer.files) handleFiles(e.dataTransfer.files)
+          }}
+          className={cn(
+            'mt-4 flex flex-col items-center gap-2 rounded-[var(--radius-3)] border border-dashed px-6 py-9 text-center transition-colors duration-[120ms]',
+            over ? 'border-[var(--brand-primary)] bg-[var(--p-06)]' : 'border-[var(--p-16)] bg-[var(--p-04)]',
+          )}
         >
-          {busy ? 'Importing…' : 'Choose files'}
-        </button>
-        <input
-          ref={inputRef}
-          type="file"
-          accept=".csv,.xlsx,.xls"
-          multiple
-          className="hidden"
-          onChange={(e) => e.target.files && handleFiles(e.target.files)}
-        />
-      </div>
+          <Upload className="size-6 text-[var(--muted-foreground)]" />
+          <p className="text-[0.9375rem] font-medium text-[var(--text)]">Drop CSV or XLSX files here</p>
+          <button
+            disabled={busy}
+            onClick={() => inputRef.current?.click()}
+            className="mt-2 h-10 rounded-[var(--radius-3)] bg-[var(--brand-primary)] px-5 text-sm font-semibold text-[var(--primary-foreground)] transition-[filter] duration-[120ms] hover:brightness-110 disabled:opacity-50"
+          >
+            {busy ? 'Importing…' : 'Choose files'}
+          </button>
+          <input
+            ref={inputRef}
+            type="file"
+            accept=".csv,.xlsx,.xls"
+            multiple
+            className="hidden"
+            onChange={(e) => e.target.files && handleFiles(e.target.files)}
+          />
+        </div>
+      </section>
       {log.length > 0 && (
-        <div className="flex flex-col gap-1.5 rounded-[var(--radius-4)] border border-[var(--line)] bg-card p-4">
-          <h3 className="pb-2 text-[0.6875rem] font-semibold tracking-[0.07em] text-[var(--muted-foreground)] uppercase">
-            Import log
-          </h3>
+        <section className={cardClass}>
+          <span className={cn(cardLabelClass, 'mb-2')}>Import log</span>
           {log.map((e, i) => (
             <div
               key={i}
-              className="flex items-baseline justify-between gap-3 border-b border-[var(--line)] py-1.5 last:border-b-0 text-sm"
+              className="flex items-baseline justify-between gap-3 border-t border-[var(--line)] py-2.5 text-sm first-of-type:border-t-0"
             >
               <span className="flex-1 truncate">
                 <span className="text-[var(--text)]">{e.file}</span>
@@ -219,7 +230,7 @@ export function FileDrop() {
               </span>
             </div>
           ))}
-        </div>
+        </section>
       )}
     </div>
   )

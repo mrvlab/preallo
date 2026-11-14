@@ -13,7 +13,7 @@ import { useModals } from '@/components/modals/modals-provider'
 import { Bone } from '@/components/ui/skeleton-block'
 import { krw } from '@/lib/format'
 import { BUCKET_LABELS, type Bucket } from '@/lib/months'
-import { cn } from '@/lib/utils'
+import { Segmented } from '@/components/ui/segmented'
 
 const BUCKETS: Bucket[] = ['needs', 'wants', 'savings']
 
@@ -60,25 +60,22 @@ export default function PlanPage() {
           )}
         </div>
 
-        <div role="tablist" className="mb-3 flex rounded-[7px] bg-[var(--p-06)] p-[3px] lg:hidden">
-          {BUCKETS.map((b) => (
-            <button
-              key={b}
-              role="tab"
-              aria-selected={active === b}
-              onClick={() => setActive(b)}
-              className={cn(
-                'flex h-7 flex-1 items-center justify-center gap-1.5 rounded-[var(--radius-2)] text-sm transition-colors duration-[120ms]',
-                active === b
-                  ? 'bg-card font-medium text-[var(--text)] shadow-[0_1px_3px_rgba(0,0,0,.08),0_0_0_1px_var(--p-10)]'
-                  : 'text-[var(--text)]',
-              )}
-            >
-              <i className="size-2 rounded-full" style={{ background: `var(--${b})` }} />
-              {BUCKET_LABELS[b]}
-            </button>
-          ))}
-        </div>
+        <Segmented
+          label="Bucket"
+          className="mb-3 grid w-full lg:hidden"
+          segmentClassName="text-[var(--text)]"
+          value={active}
+          onChange={setActive}
+          options={BUCKETS.map((b) => ({
+            value: b,
+            label: (
+              <>
+                <i className="size-2 rounded-full" style={{ background: `var(--${b})` }} />
+                {BUCKET_LABELS[b]}
+              </>
+            ),
+          }))}
+        />
 
         <div className="grid items-start gap-4 @min-[60rem]/main:grid-cols-[2fr_1fr] @min-[60rem]/main:gap-6">
           <div className="overflow-hidden rounded-[var(--radius-4)] bg-card shadow-[inset_0_0_0_1px_var(--line)]">

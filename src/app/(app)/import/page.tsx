@@ -24,15 +24,17 @@ export default function ImportPage() {
             </h1>
             <p className="text-sm text-[var(--muted-foreground)]">
               Drop your old budget sheets, Excel or CSV. Rows are sorted by rules, and the ones the rules
-              cannot place wait for you below.
+              cannot place wait for you to pick a bucket.
             </p>
           </div>
         </div>
       </header>
-      <div className="flex max-w-3xl flex-col gap-6">
+      <div className="grid items-start gap-5 @min-[60rem]/main:grid-cols-[672fr_486fr]">
         <FileDrop />
-        <ReviewQueue />
-        <ClearHistory />
+        <div className="flex flex-col gap-5">
+          <ReviewQueue />
+          <ClearHistory />
+        </div>
       </div>
     </div>
   )

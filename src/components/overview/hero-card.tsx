@@ -7,6 +7,7 @@ import { currentMonthKey, daysInMonth, isEditable, monthName } from '@/lib/month
 import { RollingDigits } from '@/components/motion/rolling-digits'
 import { useModals } from '@/components/modals/modals-provider'
 import { cn } from '@/lib/utils'
+import { Segmented } from '@/components/ui/segmented'
 
 type Props = {
   monthKey: string
@@ -65,24 +66,17 @@ export function HeroCard({ monthKey, free, income, reserved, missingCount, paid,
       </div>
       <div className="mt-0.5 mb-4 text-[0.84rem] leading-snug text-[var(--muted-foreground)]">{sub}</div>
 
-      <div role="tablist" aria-label="Show amount per" className="mb-7 inline-flex rounded-[7px] bg-[var(--p-06)] p-[3px]">
-        {(['month', 'week'] as const).map((k) => (
-          <button
-            key={k}
-            role="tab"
-            aria-selected={view === k}
-            onClick={() => setView(k)}
-            className={cn(
-              'h-7 min-w-[4.5rem] rounded-[var(--radius-2)] px-3 text-sm capitalize transition-colors duration-[120ms]',
-              view === k
-                ? 'bg-card font-medium text-[var(--text)] shadow-[0_1px_3px_rgba(0,0,0,.08),0_0_0_1px_var(--p-10)]'
-                : 'text-[var(--muted-foreground)]',
-            )}
-          >
-            {k}
-          </button>
-        ))}
-      </div>
+      <Segmented
+        label="Show amount per"
+        className="mb-7"
+        segmentClassName="min-w-[4.5rem] capitalize"
+        value={view}
+        onChange={setView}
+        options={[
+          { value: 'month', label: 'Month' },
+          { value: 'week', label: 'Week' },
+        ]}
+      />
 
       <div className="grid w-full grid-cols-3 gap-4 border-t border-[var(--line)] pt-5 text-left">
         <button

@@ -95,7 +95,9 @@ function CardText({ label, big, bigSuffix, sub }: { label: string; big: ReactNod
     <span className="block min-w-0">
       <span className="block text-sm font-semibold text-[var(--muted-foreground)]">{label}</span>
       <span className="mt-2.5 flex items-baseline gap-2">
-        <b className="text-[1.875rem] leading-none font-extrabold tracking-[-0.02em] text-[var(--text)] tabular-nums">{big}</b>
+        <b className="text-[1.625rem] leading-none font-extrabold tracking-[-0.02em] whitespace-nowrap text-[var(--text)] tabular-nums sm:text-[1.875rem]">
+          {big}
+        </b>
         {bigSuffix && <span className="text-[0.9375rem] font-medium text-[var(--muted-foreground)]">{bigSuffix}</span>}
       </span>
       <span className="mt-2 block text-sm text-[var(--muted-foreground)]">{sub}</span>
@@ -180,7 +182,7 @@ function DefaultSplitCard({ initial, salary, monthName: name }: { initial: Split
 
   return (
     <section className={card}>
-      <div className="grid grid-cols-[1fr_auto] items-start gap-4">
+      <div className="grid items-start gap-x-4 gap-y-2 sm:grid-cols-[1fr_auto]">
         <CardText
           label="Default split"
           big={splitText(split)}
@@ -188,7 +190,7 @@ function DefaultSplitCard({ initial, salary, monthName: name }: { initial: Split
         />
         <button
           onClick={() => set({ needs: 50, wants: 30, savings: 20 })}
-          className="pt-8 text-base font-semibold whitespace-nowrap text-[var(--brand-primary)] underline decoration-[var(--p-16)] underline-offset-[3px] hover:decoration-[var(--brand-primary)]"
+          className="justify-self-start text-[0.9375rem] font-semibold whitespace-nowrap text-[var(--brand-primary)] underline decoration-[var(--p-16)] underline-offset-[3px] hover:decoration-[var(--brand-primary)] sm:pt-8 sm:text-base"
         >
           Use 50 / 30 / 20
         </button>

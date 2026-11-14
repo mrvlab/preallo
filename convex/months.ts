@@ -142,7 +142,7 @@ export const bucketHistory = query({
       .slice(0, months)
       .reverse()
 
-    const results: Array<{ key: string; amount: number; goal: number }> = []
+    const results: Array<{ key: string; amount: number; goal: number; income: number; goalPct: number }> = []
     for (const m of sorted) {
       const items = await ctx.db
         .query('items')
@@ -166,8 +166,9 @@ export const bucketHistory = query({
         .reduce((a, t) => a + Math.abs(t.amount), 0)
 
       const amount = Math.max(itemsTotal, txnsTotal)
-      const goal = (m.income * (m.goals[bucket as keyof typeof m.goals] || 0)) / 100
-      results.push({ key: m.key, amount, goal })
+      const goalPct = m.goals[bucket as keyof typeof m.goals] || 0
+      const goal = (m.income * goalPct) / 100
+      results.push({ key: m.key, amount, goal, income: m.income, goalPct })
     }
     return results
   },

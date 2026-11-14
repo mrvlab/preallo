@@ -20,7 +20,7 @@ export function GoalsRingCard({ pct, goals }: { pct: Totals; goals: Goals }) {
         : 'Needs or Wants is past its goal. Trim it in Plan.'
 
   return (
-    <section className="flex min-h-[15.5rem] items-center gap-5 rounded-[var(--radius-4)] bg-card px-5 py-5 shadow-[inset_0_0_0_1px_var(--line)] lg:gap-6 lg:px-7 lg:py-[1.65rem]">
+    <section className="flex items-center lg:min-h-[15.5rem] gap-5 rounded-[var(--radius-4)] bg-card px-5 py-5 shadow-[inset_0_0_0_1px_var(--line)] lg:gap-6 lg:px-7 lg:py-[1.65rem]">
       <div className="shrink-0">
         <span className="hidden lg:block">
           <GoalsRings size={195} pct={pct} goals={goals} />

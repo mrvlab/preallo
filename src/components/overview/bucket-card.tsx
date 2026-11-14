@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { krw } from '@/lib/format'
+import { krNoDecimals, krw } from '@/lib/format'
 
 export type Bucket = 'needs' | 'wants' | 'savings'
 
@@ -11,7 +11,7 @@ const LABELS: Record<Bucket, string> = {
   savings: 'Savings',
 }
 
-type HistoryPoint = { key: string; amount: number; goal: number }
+type HistoryPoint = { key: string; amount: number; income: number }
 
 type Props = {
   bucket: Bucket
@@ -24,8 +24,6 @@ type Props = {
 const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec']
 
 export function BucketCard({ bucket, amount, pct, goal, history = [] }: Props) {
-  const inkVar = `var(--${bucket}-ink)`
-  const dotVar = `var(--${bucket})`
   const diff = Math.round(pct - goal)
   const over = bucket === 'savings' ? pct < goal : pct > goal
   const empty = amount === 0
@@ -54,121 +52,76 @@ export function BucketCard({ bucket, amount, pct, goal, history = [] }: Props) {
     <Link
       href={`/plan?b=${bucket}`}
       aria-label={`${LABELS[bucket]}, ${krw(amount)}. ${sub}. Open list.`}
-      className="grid min-h-[10.2rem] grid-cols-[1fr_minmax(0,23rem)] items-center gap-4 rounded-[var(--radius-4)] bg-card px-5 py-5 shadow-[inset_0_0_0_1px_var(--line)] transition-shadow duration-[120ms] hover:shadow-[inset_0_0_0_1px_var(--p-16)] lg:gap-6 lg:px-7 lg:py-[1.65rem]"
+      className="grid min-h-[10.2rem] grid-cols-[minmax(0,1fr)_9.375rem] items-center gap-3 rounded-[var(--radius-4)] bg-card px-[1.125rem] py-4 shadow-[inset_0_0_0_1px_var(--line)] transition-shadow duration-[120ms] hover:shadow-[inset_0_0_0_1px_var(--p-16)] sm:grid-cols-[minmax(0,1fr)_minmax(12rem,23rem)] lg:gap-6 lg:px-7 lg:py-[1.65rem]"
     >
-      <div className="flex flex-col justify-center">
-        <div
-          className="flex items-center gap-2 text-sm font-semibold"
-          style={{ color: inkVar }}
-        >
-          <i
-            className="inline-block h-2 w-2 rounded-full"
-            style={{ background: dotVar }}
-          />
+      <div className="min-w-0">
+        <div className="flex items-center gap-2 text-sm font-semibold" style={{ color: `var(--${bucket}-ink)` }}>
+          <i className="size-2 rounded-full" style={{ background: `var(--${bucket})` }} />
           {LABELS[bucket]}
         </div>
-        <div className="mt-2 text-[32px] font-semibold leading-none tracking-[-0.02em] tabular-nums text-[var(--text)]">
-          {krw(amount)}
+        <div className="mt-2.5 mb-1.5 text-[1.75rem] leading-[1.05] font-extrabold tracking-[-0.03em] whitespace-nowrap text-[var(--text)] tabular-nums lg:mt-3.5 lg:text-[2.125rem]">
+          {krNoDecimals(amount)}
+          <small className="ml-1.5 text-[0.9375rem] font-medium tracking-normal text-[var(--muted-foreground)]">kr</small>
         </div>
-        <div className={`mt-2 text-xs ${tone}`}>{sub}</div>
+        <div className={`text-[0.8125rem] leading-snug lg:text-sm ${tone}`}>{sub}</div>
       </div>
-      <MiniBars history={history} goal={goal} color={dotVar} bucket={bucket} />
+      <MiniBars history={history} goal={goal} bucket={bucket} />
     </Link>
   )
 }
 
-function MiniBars({
-  history,
-  goal,
-  color,
-  bucket,
-}: {
-  history: HistoryPoint[]
-  goal: number
-  color: string
-  bucket: Bucket
-}) {
+// HTML rather than SVG so labels keep their real size when the chart narrows on phones.
+function MiniBars({ history, goal, bucket }: { history: HistoryPoint[]; goal: number; bucket: Bucket }) {
   if (history.length === 0) {
     return (
-      <div className="flex items-end justify-center border-l border-[var(--line)] pl-6 text-xs text-[var(--muted-foreground)]">
-        History shows once you import or close months.
+      <div className="flex h-[5.25rem] items-center justify-center border-l border-[var(--line)] pl-3 text-center text-xs text-[var(--muted-foreground)] lg:h-[6.9rem]">
+        History shows once months close.
       </div>
     )
   }
-  const points = history.slice(-3)
-  const maxAmount = Math.max(...points.map((p) => p.amount), ...points.map((p) => p.goal), 1)
-  const W = 240
-  const H = 88
-  const bars = Math.max(points.length, 1)
-  const bw = W / (bars * 1.6)
-  const gap = (W - bw * bars) / (bars - 1 || 1)
-  const goalRatio = points[points.length - 1].goal
-    ? points[points.length - 1].goal / maxAmount
-    : 0.5
-  const goalY = H - goalRatio * H
+  const points = history.slice(-3).map((p) => ({ ...p, pct: p.income > 0 ? (p.amount / p.income) * 100 : 0 }))
+  const top = Math.max(goal, ...points.map((p) => p.pct), 1) * 1.15
+  const goalAt = (goal / top) * 100
 
   return (
-    <div className="relative border-l border-[var(--line)] pl-5">
-      <svg viewBox={`0 0 ${W} ${H + 18}`} width="100%" height={H + 18} className="block">
-        <text
-          x={0}
-          y={goalY + 12}
-          fontSize={11}
-          fill="var(--muted-foreground)"
+    <div className="relative h-[5.25rem] border-l border-[var(--line)] pl-3 lg:h-[6.9rem] lg:pl-5">
+      <div className="absolute top-0 right-0 bottom-4 left-3 lg:left-5">
+        <div className="absolute right-0 left-6 border-t border-dashed border-[var(--p-16)]" style={{ bottom: `${goalAt}%` }} />
+        <span
+          className="absolute left-0 translate-y-1/2 text-[0.625rem] text-[var(--muted-foreground)] tabular-nums lg:text-[0.6875rem]"
+          style={{ bottom: `${goalAt}%` }}
         >
           {goal}%
-        </text>
-        <line
-          x1={28}
-          x2={W}
-          y1={goalY}
-          y2={goalY}
-          stroke="var(--p-16)"
-          strokeDasharray="3 3"
-          strokeWidth={1}
-        />
-        {points.map((p, i) => {
-          const h = (p.amount / maxAmount) * H
-          const x = 28 + i * (bw + gap)
-          const isLast = i === points.length - 1
-          const pctLabel = p.goal > 0 ? Math.round((p.amount / (p.goal * (100 / (p.goal || 1)))) * 100) : 0
-          const pctActual = p.goal > 0 ? Math.round((p.amount / (p.goal / (goal / 100)) ) * 100) : 0
-          return (
-            <g key={p.key}>
-              {isLast && (
-                <text
-                  x={x + bw / 2}
-                  y={H - h - 4}
-                  fontSize={11}
-                  fill={`var(--${bucket}-ink)`}
-                  textAnchor="middle"
-                  fontWeight={600}
-                >
-                  {pctActual}%
-                </text>
-              )}
-              <rect
-                x={x}
-                y={H - h}
-                width={bw}
-                height={Math.max(2, h)}
-                rx={4}
-                fill={color}
-                opacity={isLast ? 0.95 : 0.35}
-              />
-              <text
-                x={x + bw / 2}
-                y={H + 14}
-                fontSize={11}
-                fill="var(--muted-foreground)"
-                textAnchor="middle"
-              >
-                {MONTH_SHORT[Number(p.key.split('-')[1]) - 1]}
-              </text>
-            </g>
-          )
-        })}
-      </svg>
+        </span>
+        <div className="absolute inset-y-0 right-0 left-6 flex items-end justify-around">
+          {points.map((p, i) => {
+            const last = i === points.length - 1
+            return (
+              <div key={p.key} className="relative flex h-full w-[1.375rem] items-end lg:w-8">
+                <i
+                  className="block w-full rounded-[3px] transition-[height] duration-700 ease-[cubic-bezier(.2,.8,.2,1)]"
+                  style={{
+                    height: `${Math.max(2, (p.pct / top) * 100)}%`,
+                    background: `var(--${bucket})`,
+                    opacity: last ? 0.95 : 0.35,
+                  }}
+                />
+                {last && (
+                  <span
+                    className="absolute left-1/2 -translate-x-1/2 -translate-y-full pb-0.5 text-[0.625rem] font-semibold tabular-nums lg:text-[0.6875rem]"
+                    style={{ bottom: `${Math.max(2, (p.pct / top) * 100)}%`, color: `var(--${bucket}-ink)` }}
+                  >
+                    {Math.round(p.pct)}%
+                  </span>
+                )}
+                <span className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[0.625rem] whitespace-nowrap text-[var(--muted-foreground)] lg:text-[0.6875rem]">
+                  {MONTH_SHORT[Number(p.key.split('-')[1]) - 1]}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      </div>
     </div>
   )
 }

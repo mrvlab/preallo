@@ -58,7 +58,7 @@ export default function DefaultSplitPage() {
 
   return (
     <div className="px-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-32 lg:px-7 lg:pt-0">
-      <header className="flex flex-wrap items-center justify-between gap-3 py-4 lg:h-[4.875rem] lg:py-0 lg:pt-1">
+      <header className="flex flex-wrap items-center justify-between gap-3 pt-1 pb-5 lg:min-h-[4.875rem] lg:pt-6 lg:pb-7">
         <div className="flex items-center gap-2">
           <Link
             href="/settings"

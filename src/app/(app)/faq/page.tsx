@@ -249,7 +249,7 @@ function Accordion({ items }: { items: Array<[string, ReactNode]> }) {
 export default function FaqPage() {
   return (
     <div className="px-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-10 lg:px-7 lg:pt-0">
-      <header className="py-4 lg:flex lg:h-[4.875rem] lg:items-center lg:py-0 lg:pt-1">
+      <header className="pt-1 pb-5 lg:flex lg:min-h-[4.875rem] lg:items-center lg:pt-6 lg:pb-7">
         <div className="flex items-center gap-2">
           <Link
             href="/settings"

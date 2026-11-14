@@ -1,6 +1,6 @@
 # Preallo
 
-Next.js (App Router) + shadcn/ui (Radix) + Tailwind, managed with bun.
+v2: Next.js (App Router) + shadcn/ui (Radix) + Tailwind, managed with bun.
 
 ## Develop
 
@@ -11,4 +11,4 @@ bun run dev
 
 ## Archive
 
-The previous Next 14 / MUI / Pages Router app is preserved on branch `archive/v2-pages-router` and tag `v2.0.0-archive`.
+The v1 app (Next 14 / MUI / Pages Router) is preserved on branch `archive/v1-nextjs14-mui-pages-router` and tag `v1.0.0-archive`.

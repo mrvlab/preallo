@@ -99,6 +99,37 @@ export const summary = query({
   },
 })
 
+export const ensureImportedMonth = mutation({
+  args: { key: v.string(), income: v.number() },
+  returns: v.id('months'),
+  handler: async (ctx, { key, income }) => {
+    const userId = await getUserFromIdentity(ctx)
+    if (!userId) throw new Error('Not authenticated')
+    const existing = await ctx.db
+      .query('months')
+      .withIndex('byUserKey', (q) => q.eq('userId', userId).eq('key', key))
+      .unique()
+    if (existing) {
+      if (income > existing.income) {
+        await ctx.db.patch(existing._id, { income, imported: true })
+      } else {
+        await ctx.db.patch(existing._id, { imported: true })
+      }
+      return existing._id
+    }
+    const user = await ctx.db.get(userId)
+    const goals = user?.defaultSplit ?? { needs: 50, wants: 30, savings: 20 }
+    return await ctx.db.insert('months', {
+      userId,
+      key,
+      income,
+      goals,
+      imported: true,
+      closedAt: Date.now(),
+    })
+  },
+})
+
 export const updateIncome = mutation({
   args: { key: v.string(), income: v.number() },
   returns: v.null(),

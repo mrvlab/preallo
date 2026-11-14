@@ -19,7 +19,7 @@ const navMobile = [
 ] as const
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const path = usePathname()
+  const path = usePathname() ?? '/'
   return (
     <div className="flex min-h-screen w-full flex-col md:flex-row bg-[var(--side)]">
       <aside className="hidden md:flex w-60 shrink-0 flex-col justify-between bg-[var(--side)] px-5 py-6">

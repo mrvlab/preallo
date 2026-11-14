@@ -37,13 +37,14 @@ export function GoalsRings({ size = 170, pct, goals }: Props) {
     const t = window.setTimeout(() => setPlaying(true), 20)
     return () => window.clearTimeout(t)
   }, [reduced, pct.needs, pct.wants, pct.savings])
+  // Proportions from the Figma ring: stroke 11.1% of the size, 3.7% between rings.
   const CX = size / 2
-  const SW = size * 0.085
-  const GAP = size * 0.02
+  const SW = size * 0.111
+  const GAP = size * 0.037
   const radii: Record<keyof Goals, number> = {
-    needs: CX - SW / 2 - 2,
-    wants: CX - SW * 1.5 - GAP - 2,
-    savings: CX - SW * 2.5 - GAP * 2 - 2,
+    needs: CX - SW / 2,
+    wants: CX - SW * 1.5 - GAP,
+    savings: CX - SW * 2.5 - GAP * 2,
   }
 
   return (
@@ -70,7 +71,7 @@ export function GoalsRings({ size = 170, pct, goals }: Props) {
                 cy={CX}
                 r={R}
                 fill="none"
-                stroke="var(--p-10)"
+                stroke={`var(--${k}-soft)`}
                 strokeWidth={SW}
               />
               {main > 0.5 && (

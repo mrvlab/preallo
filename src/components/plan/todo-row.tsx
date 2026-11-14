@@ -51,6 +51,7 @@ export function TodoRow({ item, readOnly, onOpen }: Props) {
       <button
         disabled={readOnly}
         onClick={() => onOpen(item._id)}
+        data-press="none"
         className={cn(
           'min-w-0 flex-1 py-2 text-left text-[0.9375rem] leading-5 font-medium [overflow-wrap:break-word]',
           item.paid

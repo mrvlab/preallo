@@ -297,7 +297,9 @@
   transform: translateX(-50%) translateY(20px);
   opacity: 0;
   pointer-events: none;
-  transition: all 0.3s cubic-bezier(0.2, 0.9, 0.25, 1);
+  transition:
+    opacity 0.3s cubic-bezier(0.2, 0.9, 0.25, 1),
+    transform 0.3s cubic-bezier(0.2, 0.9, 0.25, 1);
 }
 .pa-toast[data-show='true'] {
   opacity: 1;
@@ -310,12 +312,52 @@
   }
 }
 
+/* Press feedback lands on pointer-down, instantly. Full-width rows skip the scale (it would
+   shift their edges) and rely on their background highlight instead. */
+button:not(:disabled):not(.w-full):not([data-press]):active,
+[role='tab']:not(:disabled):active {
+  scale: 0.97;
+}
+/* Whole cards give way only slightly, so the page does not appear to shrink. */
+[data-press='card']:not(:disabled):active {
+  scale: 0.99;
+}
+
+/* While the sheet is being dragged it follows the finger; no keyframes may fight it. */
+.pa-sheet[data-dragging='true'],
+.pa-sheet[data-dragged='true'][data-state='open'] {
+  animation: none !important;
+}
+
+/* Reduced motion keeps the feedback but swaps movement for a short cross-fade. */
 @media (prefers-reduced-motion: reduce) {
-  .pa-overlay,
-  .pa-sheet {
-    animation: none !important;
+  .pa-sheet[data-state='open'] {
+    animation: pa-fade-in 0.2s ease !important;
+  }
+  .pa-sheet[data-state='closed'] {
+    animation: pa-fade-out 0.15s ease !important;
   }
   .pa-toast {
-    transition: none;
+    transition: opacity 0.2s ease;
+  }
+  button:active,
+  [role='tab']:active,
+  [data-press='card']:active {
+    scale: none !important;
+  }
+}
+
+/* Translucent chrome goes solid when the system asks for less transparency or more contrast. */
+@media (prefers-reduced-transparency: reduce) {
+  .pa-material {
+    background: var(--background) !important;
+    backdrop-filter: none !important;
+  }
+}
+@media (prefers-contrast: more) {
+  .pa-material {
+    background: var(--background) !important;
+    backdrop-filter: none !important;
+    border-color: var(--p-60) !important;
   }
 }

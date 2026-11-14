@@ -64,6 +64,7 @@ export function BucketCard({ bucket, amount, pct, goal, history = [] }: Props) {
   return (
     <Link
       href={`/plan?b=${bucket}`}
+      data-press="card"
       aria-label={`${LABELS[bucket]}, ${krw(amount)}. ${sub}. Open list.`}
       className="@container block rounded-[var(--radius-4)] bg-card shadow-[inset_0_0_0_1px_var(--line)] transition-shadow duration-[120ms] hover:shadow-[inset_0_0_0_1px_var(--p-16)]"
     >

@@ -185,7 +185,7 @@ export function FileDrop() {
       </div>
       {log.length > 0 && (
         <div className="flex flex-col gap-1.5 rounded-[var(--radius-4)] border border-[var(--line)] bg-card p-4">
-          <h3 className="pb-2 text-xs font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
+          <h3 className="pb-2 text-[0.6875rem] font-semibold tracking-[0.07em] text-[var(--muted-foreground)] uppercase">
             Import log
           </h3>
           {log.map((e, i) => (

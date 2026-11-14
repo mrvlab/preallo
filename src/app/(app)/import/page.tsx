@@ -1,20 +1,35 @@
 'use client'
 
+import Link from 'next/link'
+import { ChevronLeft } from 'lucide-react'
 import { FileDrop } from '@/components/import/file-drop'
 import { ReviewQueue } from '@/components/import/review-queue'
 import { ClearHistory } from '@/components/import/clear-history'
 
 export default function ImportPage() {
   return (
-    <div className="mx-auto w-full max-w-3xl p-5 md:p-8">
-      <h1 className="mb-2 text-[22px] font-semibold tracking-[-0.01em] text-[var(--text)]">
-        Historical import
-      </h1>
-      <p className="mb-6 text-sm text-[var(--muted-foreground)]">
-        Drop your old Excel-exported budget CSVs. Rows go into transactions,
-        categorised by rules, with low-confidence rows flagged for review.
-      </p>
-      <div className="flex flex-col gap-6">
+    <div className="px-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-10 lg:px-7 lg:pt-0">
+      <header className="pt-1 pb-5 lg:flex lg:min-h-[4.875rem] lg:items-center lg:pt-6 lg:pb-7">
+        <div className="flex items-center gap-2">
+          <Link
+            href="/settings"
+            aria-label="Back to Settings"
+            className="grid size-9 place-items-center rounded-full text-[var(--text)] transition-colors duration-[120ms] hover:bg-[var(--p-06)]"
+          >
+            <ChevronLeft className="size-5" />
+          </Link>
+          <div>
+            <h1 className="text-[1.75rem] leading-tight font-bold tracking-[-0.03em] text-[var(--text)] lg:text-[2.1rem]">
+              Import old sheets
+            </h1>
+            <p className="text-sm text-[var(--muted-foreground)]">
+              Drop your old budget sheets, Excel or CSV. Rows are sorted by rules, and the ones the rules
+              cannot place wait for you below.
+            </p>
+          </div>
+        </div>
+      </header>
+      <div className="flex max-w-3xl flex-col gap-6">
         <FileDrop />
         <ReviewQueue />
         <ClearHistory />

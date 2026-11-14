@@ -231,6 +231,7 @@ export function NewMonthFlow({
                         <button
                           type="button"
                           onClick={toggle}
+                          data-press="none"
                           className="flex-1 text-left text-[15px] font-medium text-[var(--text)]"
                         >
                           {i.name}

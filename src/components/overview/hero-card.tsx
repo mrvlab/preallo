@@ -57,7 +57,7 @@ export function HeroCard({ monthKey, free, income, reserved, missingCount, paid,
       </div>
       <div
         className={cn(
-          'mt-1.5 text-[clamp(2.875rem,4.4vw,3.75rem)] leading-[1.05] font-bold tracking-[-0.025em] whitespace-nowrap tabular-nums',
+          'mt-1.5 text-[clamp(2.875rem,4.4vw,3.75rem)] leading-[1.05] font-bold tracking-[-0.03em] whitespace-nowrap tabular-nums',
           neg ? 'text-[var(--warn)]' : 'text-[var(--text)]',
         )}
       >
@@ -89,6 +89,7 @@ export function HeroCard({ monthKey, free, income, reserved, missingCount, paid,
           onClick={openIncome}
           disabled={!editable}
           aria-label={editable ? `Salary ${krw(income)}. Change.` : `Salary ${krw(income)}`}
+          data-press="none"
           className="group min-w-0 text-left disabled:cursor-default"
         >
           <Label>Salary</Label>

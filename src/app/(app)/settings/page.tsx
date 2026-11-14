@@ -36,7 +36,7 @@ export default function SettingsPage() {
   return (
     <div className="px-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-8 lg:px-7 lg:pt-0">
       <header className="flex h-[4.875rem] items-center lg:pt-1">
-        <h1 className="text-[1.75rem] leading-tight font-bold tracking-[-0.01em] text-[var(--text)] lg:text-[2.1rem]">
+        <h1 className="text-[1.75rem] leading-tight font-bold tracking-[-0.03em] text-[var(--text)] lg:text-[2.1rem]">
           Settings
         </h1>
       </header>
@@ -128,6 +128,7 @@ function SettingCard({
     <button
       onClick={onClick}
       disabled={disabled}
+      data-press="card"
       className={cn(
         card,
         'grid grid-cols-[1fr_auto] items-center gap-4 text-left transition-shadow duration-[120ms] enabled:hover:shadow-[inset_0_0_0_1px_var(--p-16)] disabled:cursor-default',
@@ -284,6 +285,7 @@ function LinkCard({ href, title, sub }: { href: string; title: string; sub: stri
   return (
     <Link
       href={href}
+      data-press="card"
       className={cn(card, 'flex items-center justify-between gap-4 transition-shadow duration-[120ms] hover:shadow-[inset_0_0_0_1px_var(--p-16)]')}
     >
       <span>

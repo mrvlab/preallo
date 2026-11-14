@@ -1,9 +1,10 @@
 'use client'
 
-import { ComponentProps, ReactNode } from 'react'
+import { ComponentProps, PointerEvent as ReactPointerEvent, ReactNode, useRef } from 'react'
 import { Dialog } from 'radix-ui'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { project, rubberband, spring } from '@/lib/motion/spring'
 
 type ModalProps = {
   open: boolean
@@ -15,12 +16,19 @@ type ModalProps = {
 }
 
 export function Modal({ open, onOpenChange, title, lead, children, header }: ModalProps) {
+  const drag = useSheetDrag(() => onOpenChange(false))
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="pa-overlay" />
-        <Dialog.Content className="pa-sheet" aria-describedby={undefined}>
-          <div className="mx-auto mt-2 h-[5px] w-10 shrink-0 rounded-full bg-[var(--p-16)] md:hidden" />
+        <Dialog.Overlay ref={drag.overlayRef} className="pa-overlay" />
+        <Dialog.Content ref={drag.sheetRef} className="pa-sheet" aria-describedby={undefined}>
+          {/* Grab zone: on phones the sheet follows the finger down and closes on a flick. */}
+          <div
+            {...drag.handlers}
+            className="relative z-10 -mb-[7px] flex h-5 shrink-0 cursor-grab touch-none items-start justify-center pt-2 active:cursor-grabbing md:hidden"
+          >
+            <div className="h-[5px] w-10 rounded-full bg-[var(--p-16)]" />
+          </div>
           <div className="overflow-y-auto px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+22px)] md:px-6 md:pt-5 md:pb-[22px]">
             {header}
             <Dialog.Title className="mt-1.5 mb-1 text-[20px] leading-7 font-bold tracking-[-0.02em] text-[var(--text)]">
@@ -158,4 +166,89 @@ export function Toggle({
       </span>
     </button>
   )
+}
+
+function useSheetDrag(onDismiss: () => void) {
+  const sheetRef = useRef<HTMLDivElement>(null)
+  const overlayRef = useRef<HTMLDivElement>(null)
+  const state = useRef<{ startY: number; y: number; history: Array<{ y: number; t: number }> } | null>(null)
+  const stop = useRef<(() => void) | null>(null)
+
+  function apply(y: number) {
+    const sheet = sheetRef.current
+    if (!sheet) return
+    sheet.style.transform = y === 0 ? '' : `translateY(${y}px)`
+    if (overlayRef.current) {
+      overlayRef.current.style.opacity = String(Math.max(0, 1 - y / sheet.offsetHeight))
+    }
+  }
+
+  function onPointerDown(e: ReactPointerEvent<HTMLDivElement>) {
+    const sheet = sheetRef.current
+    if (!sheet) return
+    e.currentTarget.setPointerCapture(e.pointerId)
+    // Grabbing a sheet that is still springing back picks it up where it is.
+    stop.current?.()
+    const current = new DOMMatrixReadOnly(getComputedStyle(sheet).transform).m42 || 0
+    sheet.dataset.dragging = 'true'
+    state.current = { startY: e.clientY - current, y: current, history: [{ y: current, t: e.timeStamp }] }
+  }
+
+  function onPointerMove(e: ReactPointerEvent<HTMLDivElement>) {
+    const s = state.current
+    const sheet = sheetRef.current
+    if (!s || !sheet) return
+    const raw = e.clientY - s.startY
+    s.y = raw < 0 ? rubberband(raw, sheet.offsetHeight) : raw
+    s.history.push({ y: s.y, t: e.timeStamp })
+    if (s.history.length > 5) s.history.shift()
+    apply(s.y)
+  }
+
+  function onPointerUp() {
+    const s = state.current
+    const sheet = sheetRef.current
+    state.current = null
+    if (!s || !sheet) return
+    const first = s.history[0]
+    const last = s.history[s.history.length - 1]
+    const dt = (last.t - first.t) / 1000
+    const velocity = dt > 0 ? (last.y - first.y) / dt : 0
+    const height = sheet.offsetHeight
+    // Decide from where the flick would land, not from where the finger let go.
+    const dismiss = s.y + project(velocity) > height / 2
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (dismiss) {
+      if (reduced) return onDismiss()
+      stop.current = spring({
+        from: s.y,
+        to: height,
+        velocity,
+        damping: 1,
+        response: 0.3,
+        onUpdate: apply,
+        onDone: onDismiss,
+      })
+    } else {
+      stop.current = spring({
+        from: s.y,
+        to: 0,
+        velocity,
+        damping: 0.8,
+        response: 0.3,
+        onUpdate: apply,
+        onDone: () => {
+          // Back in place: allow the normal close animation again, but never replay the entrance.
+          sheet.dataset.dragged = 'true'
+          delete sheet.dataset.dragging
+        },
+      })
+    }
+  }
+
+  return {
+    sheetRef,
+    overlayRef,
+    handlers: { onPointerDown, onPointerMove, onPointerUp, onPointerCancel: onPointerUp },
+  }
 }

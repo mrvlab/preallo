@@ -103,7 +103,7 @@ function Shell({ children }: { children: ReactNode }) {
 
       <nav
         aria-label="Main"
-        className="fixed right-0 bottom-0 left-0 z-40 flex h-[4.75rem] border-t border-[var(--line)] bg-[color-mix(in_srgb,var(--background)_88%,transparent)] px-1.5 pt-1.5 pb-[calc(env(safe-area-inset-bottom)+0.875rem)] backdrop-blur-xl backdrop-saturate-[1.8] lg:hidden"
+        className="pa-material fixed right-0 bottom-0 left-0 z-40 flex h-[4.75rem] border-t border-[var(--line)] bg-[color-mix(in_srgb,var(--background)_88%,transparent)] px-1.5 pt-1.5 pb-[calc(env(safe-area-inset-bottom)+0.875rem)] backdrop-blur-xl backdrop-saturate-[1.8] lg:hidden"
       >
         {tabs.map(({ href, label, Icon }) => (
           <Link

@@ -259,7 +259,7 @@ export default function FaqPage() {
             <ChevronLeft className="size-5" />
           </Link>
           <div>
-            <h1 className="text-[1.75rem] leading-tight font-bold tracking-[-0.01em] text-[var(--text)] lg:text-[2.1rem]">
+            <h1 className="text-[1.75rem] leading-tight font-bold tracking-[-0.03em] text-[var(--text)] lg:text-[2.1rem]">
               FAQ
             </h1>
             <p className="text-sm text-[var(--muted-foreground)]">

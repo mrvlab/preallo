@@ -124,7 +124,7 @@ function TodayMarker({ end }: { end?: boolean }) {
   return (
     <div className={cn('relative h-0', end ? 'mt-4 mb-2' : 'my-[0.5625rem]')}>
       <div className="absolute top-0 right-0 -left-5 border-t border-dashed border-[var(--brand-primary)] opacity-45" />
-      <span className="absolute -top-2 -left-5 bg-card pr-2 text-[0.6875rem] font-extrabold tracking-[0.06em] text-[var(--brand-primary)] uppercase">
+      <span className="absolute -top-2 -left-5 bg-card pr-2 text-[0.6875rem] font-extrabold tracking-[0.07em] text-[var(--brand-primary)] uppercase">
         Today
       </span>
     </div>

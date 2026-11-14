@@ -12,7 +12,7 @@ import { useModals } from '@/components/modals/modals-provider'
 import { useToast } from '@/components/toast'
 import { RollingDigits } from '@/components/motion/rolling-digits'
 import { Bone } from '@/components/ui/skeleton-block'
-import { inputClass } from '@/components/ui/modal'
+import { inputClass, SelectInput } from '@/components/ui/modal'
 import { krNoDecimals } from '@/lib/format'
 import { monthName } from '@/lib/months'
 import { cn } from '@/lib/utils'
@@ -65,9 +65,9 @@ export default function SettingsPage() {
             />
             <section className={cn(card, 'grid grid-cols-[1fr_auto] items-center gap-4')}>
               <CardText label="Currency" big="SEK" sub="Swedish krona" />
-              <select aria-label="Currency" className={cn(inputClass, 'w-24 text-[var(--muted-foreground)]')} defaultValue="SEK">
+              <SelectInput aria-label="Currency" wrapperClassName="w-24" defaultValue="SEK">
                 <option value="SEK">SEK</option>
-              </select>
+              </SelectInput>
             </section>
           </div>
 

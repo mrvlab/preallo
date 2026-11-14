@@ -2,7 +2,7 @@
 
 import { ComponentProps, PointerEvent as ReactPointerEvent, ReactNode, useRef } from 'react'
 import { Dialog } from 'radix-ui'
-import { X } from 'lucide-react'
+import { ChevronDown, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { project, rubberband, spring } from '@/lib/motion/spring'
 
@@ -88,8 +88,17 @@ export function TextInput(props: ComponentProps<'input'>) {
   return <input {...props} className={cn(inputClass, props.className)} />
 }
 
-export function SelectInput(props: ComponentProps<'select'>) {
-  return <select {...props} className={cn(inputClass, 'appearance-auto', props.className)} />
+// Native select for the platform picker, drawn like the text inputs with our own chevron.
+export function SelectInput({ className, wrapperClassName, ...props }: ComponentProps<'select'> & { wrapperClassName?: string }) {
+  return (
+    <span className={cn('relative block', wrapperClassName)}>
+      <select {...props} className={cn(inputClass, 'cursor-pointer appearance-none pr-9', className)} />
+      <ChevronDown
+        aria-hidden
+        className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-[var(--muted-foreground)]"
+      />
+    </span>
+  )
 }
 
 export function PrimaryButton({ className, ...props }: ComponentProps<'button'>) {

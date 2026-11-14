@@ -18,9 +18,23 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 })
 
+const description = 'Payday budget, one intentional check-in per month.'
+
+// Absolute URLs for the share image: the real domain in production, the deployment's own
+// URL on QA and previews, localhost in dev.
+const siteUrl =
+  process.env.VERCEL_ENV === 'production'
+    ? 'https://www.preallo.com'
+    : process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : 'http://localhost:3000'
+
 export const metadata: Metadata = {
-  title: 'Preallo',
-  description: 'Payday budget, one intentional check-in per month.',
+  metadataBase: new URL(siteUrl),
+  title: { default: 'Preallo', template: '%s · Preallo' },
+  description,
+  openGraph: { type: 'website', siteName: 'Preallo', title: 'Preallo', description },
+  twitter: { card: 'summary_large_image', title: 'Preallo', description },
 }
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {

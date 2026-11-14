@@ -133,7 +133,8 @@ function MonthsNav() {
           <Plus className="size-3.5" />
         </button>
       </div>
-      <ul className="flex min-h-0 flex-col overflow-y-auto">
+      {/* Padding inside the scroll box so focus outlines are not clipped by its overflow. */}
+      <ul className="-m-1 flex min-h-0 flex-col overflow-y-auto p-1">
         {shown.map((m) => {
           const active = m.key === monthKey
           const locked = !isEditable(m.key, today)

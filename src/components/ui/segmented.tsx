@@ -35,7 +35,7 @@ export function Segmented<T extends string>({
     >
       <span
         aria-hidden
-        className="absolute top-[3px] bottom-[3px] left-[3px] rounded-[var(--radius-2)] bg-card shadow-[0_1px_3px_rgba(0,0,0,.08),0_0_0_1px_var(--p-10)] transition-transform duration-300 ease-[cubic-bezier(.25,1,.5,1)] motion-reduce:transition-none"
+        className="absolute top-[3px] bottom-[3px] left-[3px] rounded-[var(--radius-2)] bg-card shadow-[0_1px_3px_rgba(0,0,0,.08),0_0_0_1px_var(--p-10)] transition-transform dark:bg-[var(--p-16)] dark:shadow-none duration-300 ease-[cubic-bezier(.25,1,.5,1)] motion-reduce:transition-none"
         style={{
           width: `calc((100% - 6px) / ${options.length})`,
           transform: `translateX(${index * 100}%)`,

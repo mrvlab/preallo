@@ -1,6 +1,6 @@
 'use client'
 
-import { ComponentProps, PointerEvent as ReactPointerEvent, ReactNode, useRef } from 'react'
+import { ComponentProps, PointerEvent as ReactPointerEvent, ReactNode, useCallback, useRef } from 'react'
 import { Dialog } from 'radix-ui'
 import { ChevronDown, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -15,16 +15,37 @@ type ModalProps = {
   header?: ReactNode
 }
 
+// The last press on the page, so a dialog can grow out of the control that opened it.
+let lastPress: { x: number; y: number; t: number } | null = null
+if (typeof window !== 'undefined') {
+  window.addEventListener(
+    'pointerdown',
+    (e) => {
+      lastPress = { x: e.clientX, y: e.clientY, t: e.timeStamp }
+    },
+    { capture: true, passive: true },
+  )
+}
+
+// Sets the dialog's transform-origin to the press point, measured against where the centred
+// dialog will sit once open. Keyboard opens, or a stale press, leave it growing from the centre.
+function anchorToPress(el: HTMLDivElement | null) {
+  if (!el || !lastPress || performance.now() - lastPress.t > 1000) return
+  const left = (window.innerWidth - el.offsetWidth) / 2
+  const top = (window.innerHeight - el.offsetHeight) / 2
+  el.style.setProperty('--pa-origin', `${lastPress.x - left}px ${lastPress.y - top}px`)
+}
+
 export function Modal({ open, onOpenChange, title, lead, children, header }: ModalProps) {
-  const drag = useSheetDrag(() => onOpenChange(false))
+  const { setSheet, overlayRef, handlers } = useSheetDrag(() => onOpenChange(false))
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay ref={drag.overlayRef} className="pa-overlay" />
-        <Dialog.Content ref={drag.sheetRef} className="pa-sheet" aria-describedby={undefined}>
+        <Dialog.Overlay ref={overlayRef} className="pa-overlay" />
+        <Dialog.Content ref={setSheet} className="pa-sheet" aria-describedby={undefined}>
           {/* Grab zone: on phones the sheet follows the finger down and closes on a flick. */}
           <div
-            {...drag.handlers}
+            {...handlers}
             className="relative z-10 -mb-[7px] flex h-5 shrink-0 cursor-grab touch-none items-start justify-center pt-2 active:cursor-grabbing md:hidden"
           >
             <div className="h-[5px] w-10 rounded-full bg-[var(--p-16)]" />
@@ -255,8 +276,13 @@ function useSheetDrag(onDismiss: () => void) {
     }
   }
 
+  const setSheet = useCallback((el: HTMLDivElement | null) => {
+    sheetRef.current = el
+    anchorToPress(el)
+  }, [])
+
   return {
-    sheetRef,
+    setSheet,
     overlayRef,
     handlers: { onPointerDown, onPointerMove, onPointerUp, onPointerCancel: onPointerUp },
   }

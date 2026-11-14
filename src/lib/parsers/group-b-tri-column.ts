@@ -46,7 +46,7 @@ export const groupBTriColumn: FormatParser = {
 
     for (let r = headerIndex + 1; r < rows.length; r++) {
       const raw = rows[r]
-      for (const g of groups) {
+      for (const [gi, g] of groups.entries()) {
         const name = (raw[g.col] ?? '').toString().trim()
         const amtStr = (raw[g.col + 1] ?? '').toString().trim()
         const paidStr = (raw[g.col + 2] ?? '').toString().trim().toUpperCase()
@@ -58,8 +58,10 @@ export const groupBTriColumn: FormatParser = {
           description: name,
           amount: -Math.abs(amount),
           bucketHint: g.bucket,
+          bucketSure: true,
           paid: paidStr === 'TRUE',
-          source: { file: ctx.file, sheet: ctx.monthKey, row: r + 1 },
+          // One spreadsheet row holds three entries, so the column group is part of the id.
+          source: { file: ctx.file, sheet: ctx.monthKey, row: (r + 1) * 10 + gi },
         })
       }
     }

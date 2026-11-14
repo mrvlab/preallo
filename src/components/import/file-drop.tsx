@@ -42,7 +42,10 @@ export function FileDrop() {
       }
     }
     const classified = result.rows.map((r) => {
-      const c = classify(r.description, r.bucketHint)
+      const c =
+        r.kind === 'income'
+          ? { bucket: undefined, savingsSlug: undefined, category: 'salary', confidence: 1, needsReview: false }
+          : classify(r.description, r.bucketHint, r.bucketSure)
       return {
         date: r.date,
         monthKey: result.monthKey,

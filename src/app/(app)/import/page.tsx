@@ -2,6 +2,7 @@
 
 import { FileDrop } from '@/components/import/file-drop'
 import { ReviewQueue } from '@/components/import/review-queue'
+import { ClearHistory } from '@/components/import/clear-history'
 
 export default function ImportPage() {
   return (
@@ -16,6 +17,7 @@ export default function ImportPage() {
       <div className="flex flex-col gap-6">
         <FileDrop />
         <ReviewQueue />
+        <ClearHistory />
       </div>
     </div>
   )

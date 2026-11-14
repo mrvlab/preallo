@@ -11,10 +11,14 @@ export type Classified = {
 export function classify(
   description: string,
   bucketHint?: 'needs' | 'wants' | 'savings',
+  bucketSure = false,
 ): Classified {
   const lower = description.toLowerCase()
   for (const rule of RULES) {
     if (rule.keywords.some((k) => lower.includes(k.toLowerCase()))) {
+      if (bucketSure && bucketHint && bucketHint !== rule.bucket) {
+        return { bucket: bucketHint, category: rule.category, confidence: 0.9, needsReview: false }
+      }
       return {
         bucket: rule.bucket,
         savingsSlug: rule.savingsSlug,
@@ -28,8 +32,8 @@ export function classify(
   if (bucketHint) {
     return {
       bucket: bucketHint,
-      confidence: 0.6,
-      needsReview: true,
+      confidence: bucketSure ? 0.9 : 0.6,
+      needsReview: !bucketSure,
     }
   }
   return {

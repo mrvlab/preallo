@@ -3,6 +3,8 @@ export type RawRow = {
   description: string
   amount: number
   bucketHint?: 'needs' | 'wants' | 'savings'
+  kind?: 'income'
+  bucketSure?: boolean
   paid?: boolean
   source: { file: string; sheet: string; row: number }
 }
@@ -87,6 +89,23 @@ export function monthKeyFromFilename(name: string): string | null {
     return null
   }
   return `${year}-${String(monthNum).padStart(2, '0')}`
+}
+
+// The salary sits above the item table as `Lön, <amount>` in every layout seen so far.
+export function findSalaryRow(
+  rows: string[][],
+  limit: number,
+): { amount: number; row: number } | null {
+  for (let i = 0; i < Math.min(rows.length, limit); i++) {
+    const cells = rows[i].map((c) => (c ?? '').toString().trim())
+    const idx = cells.findIndex((c) => c.toLowerCase() === 'lön')
+    if (idx === -1) continue
+    for (let j = idx + 1; j < cells.length; j++) {
+      const amount = parseKr(cells[j])
+      if (amount > 0) return { amount, row: i + 1 }
+    }
+  }
+  return null
 }
 
 export function parseKr(input: string): number {

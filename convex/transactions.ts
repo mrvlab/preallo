@@ -95,6 +95,38 @@ export const upsertBatch = mutation({
   },
 })
 
+export const clearImported = mutation({
+  args: {},
+  returns: v.object({ transactions: v.number(), months: v.number() }),
+  handler: async (ctx) => {
+    const userId = await getUserFromIdentity(ctx)
+    if (!userId) throw new Error('Not authenticated')
+    const txns = await ctx.db
+      .query('transactions')
+      .withIndex('byUserMonth', (q) => q.eq('userId', userId))
+      .collect()
+    for (const t of txns) await ctx.db.delete(t._id)
+    const months = await ctx.db
+      .query('months')
+      .withIndex('byUserKey', (q) => q.eq('userId', userId))
+      .collect()
+    let removedMonths = 0
+    for (const m of months) {
+      if (!m.imported) continue
+      const hasItems = await ctx.db
+        .query('items')
+        .withIndex('byUserMonth', (q) =>
+          q.eq('userId', userId).eq('monthKey', m.key),
+        )
+        .first()
+      if (hasItems) continue
+      await ctx.db.delete(m._id)
+      removedMonths++
+    }
+    return { transactions: txns.length, months: removedMonths }
+  },
+})
+
 export const review = mutation({
   args: {
     id: v.id('transactions'),

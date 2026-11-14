@@ -1,5 +1,6 @@
 import {
   FormatParser,
+  findSalaryRow,
   monthKeyFromFilename,
   monthKeyFromSheetName,
   RawRow,
@@ -46,6 +47,16 @@ export function runParsersOnSheet(
   for (const parser of PARSERS) {
     if (parser.match(rows)) {
       const parsed = parser.parse(rows, { file, monthKey, sheet })
+      const salary = findSalaryRow(rows, 10)
+      if (salary) {
+        parsed.unshift({
+          date: `${monthKey}-25`,
+          description: 'Lön',
+          amount: salary.amount,
+          kind: 'income',
+          source: { file, sheet, row: salary.row },
+        })
+      }
       return {
         file,
         sheet,

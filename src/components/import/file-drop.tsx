@@ -11,6 +11,7 @@ import {
   type SheetParseResult,
 } from '@/lib/parsers/registry'
 import { classify } from '@/lib/categorise/apply'
+import { monthKeyForSheet } from '@/lib/parsers/types'
 import { api } from '../../../convex/_generated/api'
 
 type LogEntry = {
@@ -102,23 +103,24 @@ export function FileDrop() {
       if (lower.endsWith('.xlsx') || lower.endsWith('.xls')) {
         const buf = await file.arrayBuffer()
         const wb = XLSX.read(buf, { type: 'array' })
-        const anyParsed = wb.SheetNames.some((n) => /^[A-Z]{3}\d{2}$/i.test(n))
         for (const sheetName of wb.SheetNames) {
+          // Template and summary tabs are blueprints, never real months.
+          if (/template|mall|summary|sammanst|översikt/i.test(sheetName) || !monthKeyForSheet(file.name, sheetName)) {
+            entries.push({
+              file: file.name,
+              sheet: sheetName,
+              status: 'skipped',
+              reason: 'Not a month tab',
+            })
+            continue
+          }
           const sheet = wb.Sheets[sheetName]
           const rows = XLSX.utils.sheet_to_json<string[]>(sheet, {
             header: 1,
             blankrows: false,
             defval: '',
+            raw: false,
           }) as string[][]
-          if (anyParsed && !/^[A-Z]{3}\d{2}$/i.test(sheetName)) {
-            entries.push({
-              file: file.name,
-              sheet: sheetName,
-              status: 'skipped',
-              reason: 'Not a month tab (expected pattern e.g. OCT26)',
-            })
-            continue
-          }
           const result = runParsersOnSheet(file.name, sheetName, rows)
           entries.push(await processResult(result))
         }

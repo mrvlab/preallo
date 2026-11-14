@@ -15,33 +15,6 @@ export type FormatParser = {
   parse: (rows: string[][], ctx: { file: string; monthKey: string; sheet?: string }) => RawRow[]
 }
 
-// Month-year codes like OCT26, SEP26, AUG26 used as Excel sheet names.
-const SHEET_MONTH_RE = /^([A-Z]{3})(\d{2})$/
-const EN_SHORT_UPPER: Record<string, number> = {
-  JAN: 1,
-  FEB: 2,
-  MAR: 3,
-  APR: 4,
-  MAY: 5,
-  JUN: 6,
-  JUL: 7,
-  AUG: 8,
-  SEP: 9,
-  OCT: 10,
-  NOV: 11,
-  DEC: 12,
-}
-
-export function monthKeyFromSheetName(name: string): string | null {
-  const match = name.toUpperCase().match(SHEET_MONTH_RE)
-  if (!match) return null
-  const monthNum = EN_SHORT_UPPER[match[1]]
-  if (!monthNum) return null
-  const n = Number(match[2])
-  const year = n < 70 ? 2000 + n : 1900 + n
-  return `${year}-${String(monthNum).padStart(2, '0')}`
-}
-
 const SV_MONTHS: Record<string, number> = {
   januari: 1,
   februari: 2,
@@ -70,6 +43,58 @@ const EN_SHORT: Record<string, number> = {
   oct: 10,
   nov: 11,
   dec: 12,
+}
+
+const MONTH_WORDS: Record<string, number> = {
+  ...SV_MONTHS,
+  january: 1,
+  february: 2,
+  march: 3,
+  may: 5,
+  june: 6,
+  july: 7,
+  august: 8,
+  october: 10,
+  jan: 1,
+  feb: 2,
+  mar: 3,
+  apr: 4,
+  maj: 5,
+  jun: 6,
+  jul: 7,
+  aug: 8,
+  sep: 9,
+  sept: 9,
+  okt: 10,
+  oct: 10,
+  nov: 11,
+  dec: 12,
+}
+
+// Workbook tabs are named "Januari", "Feb 24", "OCT26" and so on. The month comes
+// from the tab; the year from the tab when it has one, otherwise from the file name.
+export function monthKeyForSheet(file: string, sheet: string): string | null {
+  const tokens = sheet
+    .toLowerCase()
+    .replace(/([a-zåäö])(\d)/g, '$1 $2')
+    .split(/[^a-zåäö0-9]+/)
+    .filter(Boolean)
+  const month = tokens.map((t) => MONTH_WORDS[t]).find(Boolean)
+  if (!month) return null
+  const four = tokens.find((t) => /^(19|20)\d{2}$/.test(t))
+  const two = tokens.find((t) => /^\d{2}$/.test(t))
+  const fileYear = file.match(/\b(19|20)\d{2}\b/)
+  const year = four
+    ? Number(four)
+    : two
+      ? Number(two) < 70
+        ? 2000 + Number(two)
+        : 1900 + Number(two)
+      : fileYear
+        ? Number(fileYear[0])
+        : null
+  if (!year) return null
+  return `${year}-${String(month).padStart(2, '0')}`
 }
 
 export function monthKeyFromFilename(name: string): string | null {

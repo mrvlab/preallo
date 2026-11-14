@@ -1,8 +1,8 @@
 import {
   FormatParser,
   findSalaryRow,
+  monthKeyForSheet,
   monthKeyFromFilename,
-  monthKeyFromSheetName,
   RawRow,
 } from './types'
 import { groupASwedishLegend } from './group-a-swedish-legend'
@@ -32,10 +32,7 @@ export function runParsersOnSheet(
   rows: string[][],
   monthKeyHint?: string,
 ): SheetParseResult {
-  const monthKey =
-    monthKeyHint ??
-    monthKeyFromSheetName(sheet) ??
-    monthKeyFromFilename(file)
+  const monthKey = monthKeyHint ?? monthKeyForSheet(file, sheet)
   if (!monthKey) {
     return {
       file,

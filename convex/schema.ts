@@ -32,14 +32,6 @@ export default defineSchema({
       wants: v.number(),
       savings: v.number(),
     }),
-    savingsGoals: v.optional(
-      v.array(
-        v.object({
-          slug: v.string(),
-          percent: v.number(),
-        }),
-      ),
-    ),
     imported: v.boolean(),
     closedAt: v.optional(v.number()),
   }).index('byUserKey', ['userId', 'key']),
@@ -81,17 +73,4 @@ export default defineSchema({
     .index('byUserMonth', ['userId', 'monthKey'])
     .index('byUserReview', ['userId', 'needsReview']),
 
-  imports: defineTable({
-    userId: v.id('users'),
-    startedAt: v.number(),
-    finishedAt: v.optional(v.number()),
-    filesTried: v.array(v.string()),
-    filesSkipped: v.array(
-      v.object({
-        file: v.string(),
-        reason: v.string(),
-      }),
-    ),
-    fingerprints: v.array(v.string()),
-  }).index('byUser', ['userId']),
 })

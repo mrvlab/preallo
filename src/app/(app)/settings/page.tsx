@@ -23,7 +23,7 @@ const kr2 = (n: number) =>
   `${new Intl.NumberFormat('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)} kr`
 
 export default function SettingsPage() {
-  const { monthKey: key } = useMonth()
+  const { monthKey: key, editable } = useMonth()
   const { openGoals, openDefaultSalary } = useModals()
   const me = useQuery(api.users.me)
   const summary = useQuery(api.months.summary, { key })
@@ -48,9 +48,10 @@ export default function SettingsPage() {
           <div className="flex flex-col gap-5">
             <SettingCard
               onClick={openGoals}
+              disabled={!editable}
               label={`${name} goals`}
               big={splitText(summary.goals)}
-              sub={`Needs, wants, savings. Applies to ${name} only.`}
+              sub={editable ? `Needs, wants, savings. Applies to ${name} only.` : `${name} is locked.`}
               right={<SplitBar split={summary.goals} />}
             />
             <DefaultSplitCard initial={me.defaultSplit} salary={me.defaultSalary ?? summary.income} monthName={name} />
@@ -80,7 +81,7 @@ export default function SettingsPage() {
               />
             )}
             <LinkCard href="/import" title="Import old sheets" sub="Excel or CSV, Swedish or English layouts." />
-            <ResetCard monthKey={key} />
+            {editable && <ResetCard monthKey={key} />}
           </div>
         </div>
       )}
@@ -112,6 +113,7 @@ function SettingCard({
   sub,
   right,
   onClick,
+  disabled,
 }: {
   label: string
   big: ReactNode
@@ -119,19 +121,21 @@ function SettingCard({
   sub: string
   right?: ReactNode
   onClick: () => void
+  disabled?: boolean
 }) {
   return (
     <button
       onClick={onClick}
+      disabled={disabled}
       className={cn(
         card,
-        'grid grid-cols-[1fr_auto] items-center gap-4 text-left transition-shadow duration-[120ms] hover:shadow-[inset_0_0_0_1px_var(--p-16)]',
+        'grid grid-cols-[1fr_auto] items-center gap-4 text-left transition-shadow duration-[120ms] enabled:hover:shadow-[inset_0_0_0_1px_var(--p-16)] disabled:cursor-default',
       )}
     >
       <CardText label={label} big={big} bigSuffix={bigSuffix} sub={sub} />
       <span className="flex items-center gap-3.5">
         {right}
-        <ChevronRight className="size-[1.375rem] text-[var(--muted-foreground)]" />
+        {!disabled && <ChevronRight className="size-[1.375rem] text-[var(--muted-foreground)]" />}
       </span>
     </button>
   )

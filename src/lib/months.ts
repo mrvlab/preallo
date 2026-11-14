@@ -53,6 +53,11 @@ export const CATEGORIES = [
 export const BUCKET_LABELS = { needs: 'Needs', wants: 'Wants', savings: 'Savings' } as const
 export type Bucket = keyof typeof BUCKET_LABELS
 
+// Last month, this month and every month ahead can change. Older months are locked.
+export function isEditable(key: string, today = currentMonthKey()) {
+  return key >= shiftKey(today, -1)
+}
+
 export function daysInMonth(key: string) {
   const [y, m] = key.split('-').map(Number)
   return new Date(y, m, 0).getDate()

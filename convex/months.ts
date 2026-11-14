@@ -1,6 +1,7 @@
 import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
 import { getUserFromIdentity } from './users'
+import { assertEditable } from './editable'
 
 type Bucket = 'needs' | 'wants' | 'savings'
 const BUCKETS: Bucket[] = ['needs', 'wants', 'savings']
@@ -61,6 +62,7 @@ export const summary = query({
     }
 
     let unreviewed = 0
+    let historyRows = 0
     const fromHistory = items.length === 0 && month.imported
     if (fromHistory) {
       const txns = await ctx.db
@@ -71,6 +73,7 @@ export const summary = query({
         .collect()
       for (const t of txns) {
         if (t.amount >= 0) continue
+        historyRows++
         if (t.bucket === 'needs' || t.bucket === 'wants' || t.bucket === 'savings') {
           totals[t.bucket] = r2(totals[t.bucket] + Math.abs(t.amount))
         } else {
@@ -101,8 +104,9 @@ export const summary = query({
       savings: income > 0 ? (totals.savings / income) * 100 : 0,
     }
 
-    const paid = items.filter((i) => i.paid).length
-    const payable = items.filter((i) => (i.amount ?? 0) > 0).length
+    // An imported month is a finished month: every row in it was paid.
+    const paid = fromHistory ? historyRows : items.filter((i) => i.paid).length
+    const payable = fromHistory ? historyRows : items.filter((i) => (i.amount ?? 0) > 0).length
     const missing = items.filter((i) => i.amount == null || i.amount === 0).length
 
     return {
@@ -217,6 +221,7 @@ export const startMonth = mutation({
   handler: async (ctx, { key, income, sourceKey, itemIds, keepAmounts }) => {
     const userId = await getUserFromIdentity(ctx)
     if (!userId) throw new Error('Not authenticated')
+    assertEditable(key)
     const existing = await ctx.db
       .query('months')
       .withIndex('byUserKey', (q) => q.eq('userId', userId).eq('key', key))
@@ -258,6 +263,7 @@ export const updateIncome = mutation({
   handler: async (ctx, { key, income }) => {
     const userId = await getUserFromIdentity(ctx)
     if (!userId) throw new Error('Not authenticated')
+    assertEditable(key)
     const month = await ctx.db
       .query('months')
       .withIndex('byUserKey', (q) => q.eq('userId', userId).eq('key', key))
@@ -281,6 +287,7 @@ export const updateGoals = mutation({
   handler: async (ctx, { key, goals }) => {
     const userId = await getUserFromIdentity(ctx)
     if (!userId) throw new Error('Not authenticated')
+    assertEditable(key)
     const month = await ctx.db
       .query('months')
       .withIndex('byUserKey', (q) => q.eq('userId', userId).eq('key', key))
@@ -297,6 +304,7 @@ export const resetMonth = mutation({
   handler: async (ctx, { key }) => {
     const userId = await getUserFromIdentity(ctx)
     if (!userId) throw new Error('Not authenticated')
+    assertEditable(key)
     const items = await ctx.db
       .query('items')
       .withIndex('byUserMonth', (q) =>

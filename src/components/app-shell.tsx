@@ -11,7 +11,7 @@ import { Logo } from '@/components/logo'
 import { MonthProvider, useMonth } from '@/components/month-context'
 import { ModalsProvider, useModals } from '@/components/modals/modals-provider'
 import { ToastProvider } from '@/components/toast'
-import { currentMonthKey, monthName, monthYear } from '@/lib/months'
+import { currentMonthKey, isEditable, monthName, monthYear } from '@/lib/months'
 import { cn } from '@/lib/utils'
 
 const nav = [
@@ -136,7 +136,7 @@ function MonthsNav() {
       <ul className="flex min-h-0 flex-col overflow-y-auto">
         {shown.map((m) => {
           const active = m.key === monthKey
-          const past = m.key < today
+          const locked = !isEditable(m.key, today)
           const future = m.key > today
           return (
             <li key={m.key}>
@@ -159,7 +159,7 @@ function MonthsNav() {
                   {monthName(m.key)}{' '}
                   <span className="text-[0.8125rem] text-[var(--muted-foreground)]">{monthYear(m.key)}</span>
                 </span>
-                {past && <Lock className="size-3 text-[var(--muted-foreground)]" />}
+                {locked && <Lock aria-label="Locked" className="size-3 text-[var(--muted-foreground)]" />}
               </button>
             </li>
           )

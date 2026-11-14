@@ -3,11 +3,11 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
-import { currentMonthKey } from '@/lib/months'
+import { currentMonthKey, isEditable } from '@/lib/months'
 
 const STORAGE_KEY = 'preallo.month'
 
-type MonthCtx = { monthKey: string; setMonthKey: (key: string) => void }
+type MonthCtx = { monthKey: string; editable: boolean; setMonthKey: (key: string) => void }
 
 const Ctx = createContext<MonthCtx | null>(null)
 
@@ -39,7 +39,9 @@ export function MonthProvider({ children }: { children: ReactNode }) {
     } catch {}
   }
 
-  return <Ctx.Provider value={{ monthKey, setMonthKey }}>{children}</Ctx.Provider>
+  return (
+    <Ctx.Provider value={{ monthKey, editable: isEditable(monthKey), setMonthKey }}>{children}</Ctx.Provider>
+  )
 }
 
 export function useMonth() {

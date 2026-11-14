@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Modal } from '@/components/ui/modal'
-import { monthName } from '@/lib/months'
+import { isEditable, monthName } from '@/lib/months'
 import { cn } from '@/lib/utils'
 
 const SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec']
@@ -52,13 +52,16 @@ export function MonthPickerModal({
           const key = `${year}-${String(i + 1).padStart(2, '0')}`
           const on = key === monthKey
           const has = existing.has(key)
+          // An empty month older than last month would be locked as soon as it was made.
+          const closed = !has && !isEditable(key)
           return (
             <button
               key={key}
+              disabled={closed}
               onClick={() => (has ? onPick(key) : onStart(key))}
-              aria-label={`${monthName(key)} ${year}, ${has ? 'has a budget' : 'new month'}`}
+              aria-label={`${monthName(key)} ${year}, ${has ? 'has a budget' : closed ? 'no budget, closed' : 'new month'}`}
               className={cn(
-                'relative rounded-[var(--radius-2)] px-2 py-3.5 text-center text-base font-extrabold transition-[outline-color] duration-[120ms]',
+                'relative rounded-[var(--radius-2)] px-2 py-3.5 text-center text-base font-extrabold transition-[outline-color] duration-[120ms] disabled:pointer-events-none disabled:opacity-35',
                 on
                   ? 'bg-[var(--brand-primary)] text-[var(--primary-foreground)]'
                   : has
@@ -68,7 +71,7 @@ export function MonthPickerModal({
             >
               {nm}
               {!has && !on && (
-                <small className="block text-xs font-bold text-[var(--muted-foreground)]">New</small>
+                <small className="block text-xs font-bold text-[var(--muted-foreground)]">{closed ? 'None' : 'New'}</small>
               )}
               {has && !on && (
                 <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-[var(--savings)]" />

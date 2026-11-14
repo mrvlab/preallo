@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from 'convex/react'
-import { Lock, Plus } from 'lucide-react'
+import { Check, Lock, Plus } from 'lucide-react'
 import { api } from '../../../../convex/_generated/api'
 import { BucketChip } from '@/components/plan/bucket-chip'
 import { TodoRow } from '@/components/plan/todo-row'
@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils'
 const BUCKETS: Bucket[] = ['needs', 'wants', 'savings']
 
 export default function PlanPage() {
-  const { monthKey: key } = useMonth()
+  const { monthKey: key, editable } = useMonth()
   const { openItem } = useModals()
   const summary = useQuery(api.months.summary, { key })
   const items = useQuery(api.items.listForMonth, { monthKey: key })
@@ -88,7 +88,7 @@ export default function PlanPage() {
               <>
                 <div className="flex items-center gap-2 border-b border-[var(--line)] px-4 py-3 text-sm text-[var(--muted-foreground)]">
                   <Lock className="size-3.5" />
-                  Imported from your sheet. Read only.
+                  Imported from your sheet. All paid.
                 </div>
                 {history.length === 0 ? (
                   <Empty>No {BUCKET_LABELS[active].toLowerCase()} rows in this month.</Empty>
@@ -96,36 +96,48 @@ export default function PlanPage() {
                   history.map((t) => (
                     <div
                       key={t._id}
-                      className="flex min-h-12 items-center gap-3 border-t border-[var(--line)] px-4 py-1 first:border-t-0"
+                      className="flex min-h-12 items-center gap-3 border-t border-[var(--line)] px-3 py-1 first:border-t-0"
                     >
-                      <span className="min-w-0 flex-1 text-[0.9375rem] font-medium text-[var(--text)]">
-                        {t.description}
-                        {t.category && (
-                          <small className="block text-xs font-normal text-[var(--muted-foreground)] capitalize">
-                            {t.category}
-                          </small>
-                        )}
+                      <span
+                        aria-label="Paid"
+                        className="grid size-6 shrink-0 place-items-center rounded-full bg-[var(--brand-primary)] text-[var(--primary-foreground)]"
+                      >
+                        <Check strokeWidth={3} className="size-[0.8125rem]" />
                       </span>
-                      <span className="text-sm font-semibold tabular-nums">{krw(Math.abs(t.amount))}</span>
+                      <span className="min-w-0 flex-1 py-2 text-[0.9375rem] leading-5 font-medium text-[var(--muted-foreground)] line-through decoration-[var(--p-16)]">
+                        {t.description}
+                      </span>
+                      <span className="px-2 text-sm font-semibold text-[var(--muted-foreground)] tabular-nums">
+                        {krw(Math.abs(t.amount))}
+                      </span>
                     </div>
                   ))
                 )}
               </>
             ) : (
               <>
-                <button
-                  onClick={() => openItem({ bucket: active })}
-                  className="flex w-full items-center gap-2.5 border-b border-[var(--line)] p-3 text-[0.9375rem] font-semibold text-[var(--brand-primary)] transition-colors duration-[120ms] hover:bg-[var(--p-04)]"
-                >
-                  <span className="grid size-7 place-items-center rounded-full bg-[var(--p-06)]">
-                    <Plus className="size-4" />
-                  </span>
-                  Add to {BUCKET_LABELS[active]}
-                </button>
+                {editable ? (
+                  <button
+                    onClick={() => openItem({ bucket: active })}
+                    className="flex w-full items-center gap-2.5 border-b border-[var(--line)] p-3 text-[0.9375rem] font-semibold text-[var(--brand-primary)] transition-colors duration-[120ms] hover:bg-[var(--p-04)]"
+                  >
+                    <span className="grid size-7 place-items-center rounded-full bg-[var(--p-06)]">
+                      <Plus className="size-4" />
+                    </span>
+                    Add to {BUCKET_LABELS[active]}
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2 border-b border-[var(--line)] px-4 py-3 text-sm text-[var(--muted-foreground)]">
+                    <Lock className="size-3.5" />
+                    Locked. You can change last month, this month and any month ahead.
+                  </div>
+                )}
                 {activeItems.length === 0 ? (
                   <Empty>Nothing in {BUCKET_LABELS[active]} yet.</Empty>
                 ) : (
-                  activeItems.map((i) => <TodoRow key={i._id} item={i} onOpen={(id) => openItem({ id })} />)
+                  activeItems.map((i) => (
+                    <TodoRow key={i._id} item={i} readOnly={!editable} onOpen={(id) => openItem({ id })} />
+                  ))
                 )}
               </>
             )}
@@ -143,8 +155,8 @@ export default function PlanPage() {
           ) : (
             <SideBox
               bucket={active}
-              paidCount={activeItems.filter((i) => i.paid).length}
-              itemCount={activeItems.length}
+              paidCount={summary.fromHistory ? history.length : activeItems.filter((i) => i.paid).length}
+              itemCount={summary.fromHistory ? history.length : activeItems.length}
               planned={totals[active]}
               goalAmount={summary.goalAmt[active]}
               goalPct={summary.goals[active]}

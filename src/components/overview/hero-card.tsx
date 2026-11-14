@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { krw } from '@/lib/format'
-import { currentMonthKey, daysInMonth, monthName } from '@/lib/months'
+import { currentMonthKey, daysInMonth, isEditable, monthName } from '@/lib/months'
 import { RollingDigits } from '@/components/motion/rolling-digits'
 import { useModals } from '@/components/modals/modals-provider'
 import { cn } from '@/lib/utils'
@@ -35,6 +35,7 @@ export function HeroCard({ monthKey, free, income, reserved, missingCount, paid,
   const exact = past || future || dayOfMonth <= 2 || missingCount > 0 || neg
   const value = view === 'week' ? free / weeks : exact ? free : softBand(free)
   const name = monthName(monthKey)
+  const editable = isEditable(monthKey)
 
   const eyebrow = past ? 'Left over' : 'Left to spend'
   const sub = neg
@@ -84,9 +85,14 @@ export function HeroCard({ monthKey, free, income, reserved, missingCount, paid,
       </div>
 
       <div className="grid w-full grid-cols-3 gap-4 border-t border-[var(--line)] pt-5 text-left">
-        <button onClick={openIncome} aria-label={`Salary ${krw(income)}. Change.`} className="group min-w-0 text-left">
+        <button
+          onClick={openIncome}
+          disabled={!editable}
+          aria-label={editable ? `Salary ${krw(income)}. Change.` : `Salary ${krw(income)}`}
+          className="group min-w-0 text-left disabled:cursor-default"
+        >
           <Label>Salary</Label>
-          <Value underline>{krw(income)}</Value>
+          <Value underline={editable}>{krw(income)}</Value>
         </button>
         <div className="min-w-0">
           <Label>{past ? 'Spent' : 'Reserved'}</Label>

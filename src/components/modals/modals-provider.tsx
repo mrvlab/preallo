@@ -24,7 +24,7 @@ type Modals = {
 const Ctx = createContext<Modals | null>(null)
 
 export function ModalsProvider({ children }: { children: ReactNode }) {
-  const { monthKey, setMonthKey } = useMonth()
+  const { monthKey, editable, setMonthKey } = useMonth()
   const summary = useQuery(api.months.summary, { key: monthKey })
   const months = useQuery(api.months.listForUser)
   const me = useQuery(api.users.me)
@@ -41,9 +41,10 @@ export function ModalsProvider({ children }: { children: ReactNode }) {
   const latest = monthKeys.length ? monthKeys.slice().sort().at(-1)! : monthKey
 
   const api_: Modals = {
-    openItem: setItem,
-    openIncome: () => setIncome(true),
-    openGoals: () => setGoals(true),
+    // Locked months can be viewed but not changed.
+    openItem: (t) => editable && setItem(t),
+    openIncome: () => editable && setIncome(true),
+    openGoals: () => editable && setGoals(true),
     openDefaultSalary: () => setDefaultSalary(true),
     openPicker: () => setPicker(true),
     startMonth: (key) => setFlowKey(key ?? shiftKey(latest, 1)),

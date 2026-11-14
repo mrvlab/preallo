@@ -1,6 +1,7 @@
 import { clerkMiddleware } from '@clerk/nextjs/server'
 
-export default clerkMiddleware()
+// Sign-in lives on our own domain so a home-screen launch never leaves the app.
+export default clerkMiddleware({ signInUrl: '/sign-in', signUpUrl: '/sign-up' })
 
 export const config = {
   matcher: [

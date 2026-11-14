@@ -97,24 +97,25 @@ function Shell({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      <main className="@container/main min-w-0 flex-1 bg-background pb-[5.5rem] lg:m-5 lg:rounded-[var(--radius-5)] lg:pb-0 lg:shadow-[inset_0_0_0_1px_var(--line)]">
+      <main className="@container/main min-w-0 flex-1 bg-background pb-[calc(5.5rem+env(safe-area-inset-bottom))] lg:m-5 lg:rounded-[var(--radius-5)] lg:pb-0 lg:shadow-[inset_0_0_0_1px_var(--line)]">
         {children}
       </main>
 
       <nav
         aria-label="Main"
-        className="pa-material pa-edge fixed right-0 bottom-0 left-0 z-40 flex h-[4.75rem] bg-[color-mix(in_srgb,var(--background)_88%,transparent)] px-1.5 pt-1.5 pb-[calc(env(safe-area-inset-bottom)+0.875rem)] backdrop-blur-xl backdrop-saturate-[1.8] lg:hidden"
+        className="pa-material pa-edge fixed right-0 bottom-0 left-0 z-40 flex bg-[color-mix(in_srgb,var(--background)_88%,transparent)] px-1.5 pt-1.5 pb-[max(env(safe-area-inset-bottom),0.875rem)] backdrop-blur-xl backdrop-saturate-[1.8] lg:hidden"
       >
         {tabs.map(({ href, label, Icon }) => (
           <Link
             key={href}
             href={href}
             className={cn(
-              'flex flex-1 flex-col items-center justify-center gap-0.5 rounded-[var(--radius-5)] text-[0.6875rem] font-semibold transition-colors duration-[120ms]',
+              // Fixed height: the bar grows by the home-indicator inset instead of squeezing the icons.
+              'flex h-[3.25rem] flex-1 flex-col items-center justify-center gap-1 rounded-[var(--radius-5)] text-[0.6875rem] font-semibold transition-colors duration-[120ms]',
               isActive(href) ? 'text-[var(--brand-primary)]' : 'text-[var(--muted-foreground)]',
             )}
           >
-            <Icon className="size-[1.4rem]" />
+            <Icon className="size-6 shrink-0" />
             {label}
           </Link>
         ))}

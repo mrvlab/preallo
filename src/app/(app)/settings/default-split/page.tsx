@@ -126,7 +126,7 @@ export default function DefaultSplitPage() {
             />
           </div>
 
-          <div className="fixed inset-x-4 bottom-[5.5rem] z-30 lg:sticky lg:inset-x-auto lg:bottom-5 lg:mt-5">
+          <div className="fixed inset-x-4 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-30 lg:sticky lg:inset-x-auto lg:bottom-5 lg:mt-5">
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-4)] bg-card px-5 py-3.5 shadow-[var(--shadow-6)]">
               <div className="flex items-center gap-2.5 text-sm text-[var(--muted-foreground)]">
                 <span>

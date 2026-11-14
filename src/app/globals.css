@@ -310,7 +310,7 @@
 .pa-toast {
   position: fixed;
   left: 50%;
-  bottom: 92px;
+  bottom: calc(92px + env(safe-area-inset-bottom));
   z-index: 60;
   transform: translateX(-50%) translateY(20px);
   opacity: 0;

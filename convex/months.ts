@@ -60,6 +60,25 @@ export const summary = query({
       )
     }
 
+    let unreviewed = 0
+    const fromHistory = items.length === 0 && month.imported
+    if (fromHistory) {
+      const txns = await ctx.db
+        .query('transactions')
+        .withIndex('byUserMonth', (q) =>
+          q.eq('userId', userId).eq('monthKey', key),
+        )
+        .collect()
+      for (const t of txns) {
+        if (t.amount >= 0) continue
+        if (t.bucket === 'needs' || t.bucket === 'wants' || t.bucket === 'savings') {
+          totals[t.bucket] = r2(totals[t.bucket] + Math.abs(t.amount))
+        } else {
+          unreviewed++
+        }
+      }
+    }
+
     const fixedWants = r2(
       items
         .filter((i) => i.bucket === 'wants' && i.category === 'Subscriptions')
@@ -88,6 +107,8 @@ export const summary = query({
 
     return {
       month,
+      fromHistory,
+      unreviewed,
       itemCount: items.length,
       paid,
       payable,
@@ -180,6 +201,53 @@ export const ensureImportedMonth = mutation({
       imported: true,
       closedAt: Date.now(),
     })
+  },
+})
+
+export const startMonth = mutation({
+  args: {
+    key: v.string(),
+    income: v.number(),
+    sourceKey: v.optional(v.string()),
+    itemIds: v.array(v.id('items')),
+    keepAmounts: v.boolean(),
+  },
+  returns: v.id('months'),
+  handler: async (ctx, { key, income, sourceKey, itemIds, keepAmounts }) => {
+    const userId = await getUserFromIdentity(ctx)
+    if (!userId) throw new Error('Not authenticated')
+    const existing = await ctx.db
+      .query('months')
+      .withIndex('byUserKey', (q) => q.eq('userId', userId).eq('key', key))
+      .unique()
+    if (existing) throw new Error('Month already exists')
+    const user = await ctx.db.get(userId)
+    const goals = user?.defaultSplit ?? { needs: 50, wants: 30, savings: 20 }
+    const monthId = await ctx.db.insert('months', {
+      userId,
+      key,
+      income,
+      goals,
+      imported: false,
+    })
+    for (const id of itemIds) {
+      const it = await ctx.db.get(id)
+      if (!it || it.userId !== userId || it.monthKey !== sourceKey) continue
+      await ctx.db.insert('items', {
+        userId,
+        monthKey: key,
+        bucket: it.bucket,
+        savingsSlug: it.savingsSlug,
+        name: it.name,
+        category: it.category,
+        amount: keepAmounts ? it.amount : undefined,
+        due: it.due,
+        paid: false,
+        locked: it.locked,
+        group: it.group,
+      })
+    }
+    return monthId
   },
 })
 

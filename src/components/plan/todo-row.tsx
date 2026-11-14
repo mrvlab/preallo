@@ -26,38 +26,46 @@ type Props = {
 export function TodoRow({ item, onOpen }: Props) {
   const toggle = useMutation(api.items.togglePaid)
   return (
-    <div className="group flex items-center gap-3 border-b border-[var(--line)] px-2 py-2.5 last:border-b-0 hover:bg-[var(--p-04)]">
+    <div className="flex min-h-12 items-center gap-3 border-t border-[var(--line)] px-3 py-1 transition-colors duration-[120ms] first:border-t-0 hover:bg-[var(--p-04)]">
       <button
-        aria-label={item.paid ? 'Mark unpaid' : 'Mark paid'}
-        onClick={(e) => {
-          e.stopPropagation()
-          toggle({ id: item._id }).catch(console.error)
-        }}
+        aria-label={item.paid ? `Mark ${item.name} unpaid` : `Mark ${item.name} paid`}
+        aria-pressed={item.paid}
+        onClick={() => toggle({ id: item._id })}
         className={cn(
-          'flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors duration-[120ms]',
+          'grid size-6 shrink-0 place-items-center rounded-full border-[1.5px] transition-all duration-200 ease-[cubic-bezier(.3,1.6,.5,1)]',
           item.paid
-            ? 'border-[var(--brand-primary)] bg-[var(--brand-primary)] text-white'
-            : 'border-[var(--p-16)] bg-transparent',
+            ? 'border-[var(--brand-primary)] bg-[var(--brand-primary)] text-[var(--primary-foreground)]'
+            : 'border-[var(--p-60)] bg-card hover:border-[var(--text)] hover:bg-[var(--p-04)]',
         )}
       >
-        {item.paid && <Check size={14} strokeWidth={3} />}
+        <Check
+          strokeWidth={3}
+          className={cn(
+            'size-[0.8125rem] transition-transform duration-[250ms] ease-[cubic-bezier(.3,1.8,.5,1)]',
+            item.paid ? 'scale-100' : 'scale-0',
+          )}
+        />
       </button>
       <button
-        className="flex-1 text-left text-sm text-[var(--text)]"
         onClick={() => onOpen(item._id)}
-      >
-        <span className={cn('truncate', item.paid && 'opacity-50 line-through')}>
-          {item.name}
-        </span>
-      </button>
-      <span
         className={cn(
-          'shrink-0 text-sm tabular-nums text-[var(--muted-foreground)]',
-          item.paid && 'opacity-50',
+          'min-w-0 flex-1 py-2 text-left text-[0.9375rem] leading-5 font-medium [overflow-wrap:break-word]',
+          item.paid
+            ? 'text-[var(--muted-foreground)] line-through decoration-[var(--p-16)]'
+            : 'text-[var(--text)]',
         )}
       >
-        {item.amount && item.amount > 0 ? krw(item.amount) : '—'}
-      </span>
+        {item.name}
+      </button>
+      <button
+        onClick={() => onOpen(item._id)}
+        className={cn(
+          'shrink-0 rounded-[var(--radius-2)] px-2 py-1.5 text-sm font-semibold tabular-nums transition-colors duration-[120ms] hover:bg-[var(--p-06)]',
+          item.amount ? (item.paid ? 'text-[var(--muted-foreground)]' : 'text-[var(--text)]') : 'text-[var(--brand-primary)]',
+        )}
+      >
+        {item.amount ? krw(item.amount) : 'Add amount'}
+      </button>
     </div>
   )
 }

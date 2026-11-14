@@ -2,122 +2,131 @@
 
 import { Lock } from 'lucide-react'
 import Link from 'next/link'
+import type { Id } from '../../../convex/_generated/dataModel'
 import { krw } from '@/lib/format'
+import { currentMonthKey, dayLabel } from '@/lib/months'
 import { RollingDigits } from '@/components/motion/rolling-digits'
+import { useModals } from '@/components/modals/modals-provider'
+import { cn } from '@/lib/utils'
 
 type Item = {
-  _id: string
+  _id: Id<'items'>
   name: string
   amount?: number
   due?: number
-  bucket: string
   paid: boolean
   locked: boolean
-  category?: string
+  group?: string
 }
 
-type Props = { items: Item[]; monthKey: string }
+const SHOWN = 7
 
-const WEEKDAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-
-function dayLabel(monthKey: string, day: number) {
-  const [y, m] = monthKey.split('-').map(Number)
-  const date = new Date(Date.UTC(y, m - 1, day))
-  return `${WEEKDAY_SHORT[date.getUTCDay()]} ${day}`
-}
-
-export function ComingUp({ items, monthKey }: Props) {
-  const unpaid = items
-    .filter((i) => !i.paid && i.amount && i.amount > 0 && i.due)
-    .sort((a, b) => (a.due ?? 99) - (b.due ?? 99))
-  const total = unpaid.reduce((a, i) => a + (i.amount ?? 0), 0)
-  const today = new Date().getUTCDate()
-  const shown = unpaid.slice(0, 7)
-  const todayIdx = shown.findIndex((i) => (i.due ?? 0) >= today)
-  const insertTodayAt = todayIdx === -1 ? shown.length : todayIdx
+export function ComingUp({ items, monthKey }: { items: Item[]; monthKey: string }) {
+  const { openItem } = useModals()
+  const dated = items
+    .filter((i) => i.due && (i.amount ?? 0) > 0)
+    .sort((a, b) => (a.due ?? 0) - (b.due ?? 0))
+  const pending = dated.filter((i) => !i.paid).reduce((a, i) => a + (i.amount ?? 0), 0)
+  const thisMonth = currentMonthKey()
+  // Past months are entirely behind "today"; future months entirely ahead of it.
+  const today = monthKey < thisMonth ? 99 : monthKey > thisMonth ? 0 : new Date().getDate()
+  const shown = dated.slice(0, SHOWN)
+  const firstUpcoming = shown.findIndex((i) => (i.due ?? 0) >= today)
+  const markerAt = firstUpcoming === -1 ? shown.length : firstUpcoming
 
   return (
-    <section className="flex flex-col gap-3 rounded-[var(--radius-4)] border border-[var(--line)] bg-card p-5 md:p-6">
-      <div className="flex flex-col gap-0.5">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.07em] text-[var(--muted-foreground)]">
-          COMING UP
-        </span>
-        <span className="text-[24px] font-semibold leading-tight tracking-[-0.02em] tabular-nums text-[var(--text)]">
-          <RollingDigits value={krw(total)} />
-        </span>
-        <span className="text-xs text-[var(--muted-foreground)]">
-          still to leave your account
-        </span>
+    <section className="flex flex-col rounded-[var(--radius-4)] bg-card px-5 py-5 shadow-[inset_0_0_0_1px_var(--line)] lg:px-7 lg:py-[1.65rem]">
+      <span className="text-[0.6875rem] font-semibold tracking-[0.07em] text-[var(--muted-foreground)] uppercase">
+        Coming up
+      </span>
+      <div className="mt-1 mb-[1.125rem] flex flex-wrap items-baseline gap-2">
+        <b className="text-2xl font-bold tracking-[-0.02em] text-[var(--text)] tabular-nums">
+          <RollingDigits value={krw(pending)} />
+        </b>
+        <span className="text-sm text-[var(--muted-foreground)]">still to leave your account</span>
       </div>
-      {unpaid.length === 0 ? (
-        <p className="text-sm text-[var(--muted-foreground)]">
-          Nothing pencilled in. Items with amounts and a due day show here.
+
+      {shown.length === 0 ? (
+        <p className="py-4 text-center text-sm text-[var(--muted-foreground)]">
+          Give an item a payment date and it shows here.
         </p>
       ) : (
-        <ul className="flex flex-col pt-2">
+        <div className="relative pl-5 before:absolute before:top-3.5 before:bottom-3.5 before:left-1 before:w-0.5 before:rounded-sm before:bg-[var(--p-06)]">
           {shown.map((i, idx) => {
-            const isToday = i.due === today
-            const past = (i.due ?? 0) < today
+            const isNow = !i.paid && i.due === today
+            const past = !i.paid && (i.due ?? 0) < today
             return (
-              <li key={i._id} className="contents">
-                {idx === insertTodayAt && idx !== 0 && <TodayDivider />}
-                <div className="grid grid-cols-[18px_60px_1fr_auto] items-center gap-3 py-1.5 text-sm">
+              <div key={i._id}>
+                {idx === markerAt && idx !== 0 && <TodayMarker />}
+                <button
+                  onClick={() => openItem({ id: i._id })}
+                  className={cn(
+                    'relative grid w-full grid-cols-[4.75rem_1fr_auto] items-baseline gap-3 rounded-[var(--radius-2)] py-[0.5625rem] pr-1.5 text-left text-sm transition-colors duration-[120ms] hover:bg-[var(--p-06)]',
+                    i.paid && 'text-[var(--muted-foreground)]',
+                  )}
+                >
                   <span
-                    className={
-                      isToday
-                        ? 'h-2.5 w-2.5 rounded-full bg-[var(--brand-primary)] ring-[3px] ring-[var(--p-16)]'
-                        : past
-                          ? 'h-1.5 w-1.5 rounded-full bg-[var(--muted-foreground)] opacity-50'
-                          : 'h-1.5 w-1.5 rounded-full bg-[var(--p-16)]'
-                    }
+                    className={cn(
+                      'absolute top-3.5 -left-[1.3rem] size-2.5 rounded-full transition-all duration-[250ms]',
+                      i.paid
+                        ? 'bg-[var(--savings)]'
+                        : isNow
+                          ? 'bg-[var(--brand-primary)] ring-[3px] ring-[var(--p-16)]'
+                          : past
+                            ? 'bg-[var(--muted-foreground)] opacity-45'
+                            : 'bg-card shadow-[inset_0_0_0_1.5px_var(--p-60)]',
+                    )}
                   />
                   <span
-                    className={
-                      isToday
-                        ? 'text-xs font-medium text-[var(--brand-primary)]'
-                        : 'text-xs text-[var(--muted-foreground)]'
-                    }
+                    className={cn(
+                      'text-[0.8125rem] font-medium whitespace-nowrap',
+                      isNow ? 'text-[var(--brand-primary)]' : 'text-[var(--muted-foreground)]',
+                    )}
                   >
                     {dayLabel(monthKey, i.due!)}
                   </span>
-                  <span className="flex items-center gap-1.5 truncate text-[var(--text)]">
-                    {i.locked && (
-                      <Lock
-                        size={11}
-                        className="shrink-0 text-[var(--muted-foreground)]"
-                      />
+                  <span
+                    className={cn(
+                      'font-medium [overflow-wrap:anywhere]',
+                      i.paid && 'line-through decoration-[var(--line)]',
                     )}
-                    <span className="truncate">{i.name}</span>
+                  >
+                    {i.locked && <Lock className="mr-1 inline size-2.5 align-[-1px] opacity-55" />}
+                    {i.name}
+                    {i.group && (
+                      <small className="block text-xs font-normal text-[var(--muted-foreground)]">{i.group}</small>
+                    )}
                   </span>
-                  <span className="tabular-nums text-[var(--muted-foreground)]">
-                    {krw(i.amount ?? 0)}
-                  </span>
-                </div>
-              </li>
+                  <b className={cn('tabular-nums', i.paid ? 'font-medium' : 'font-semibold')}>
+                    {krw(i.amount ?? 0).replace(' kr', '')}
+                  </b>
+                </button>
+              </div>
             )
           })}
-          {insertTodayAt === shown.length && shown.length > 0 && <TodayDivider />}
-        </ul>
+          {markerAt === shown.length && today !== 99 && <TodayMarker end />}
+        </div>
       )}
-      {unpaid.length > 0 && (
+
+      {dated.length > shown.length && (
         <Link
           href="/plan"
-          className="text-xs font-medium text-[var(--brand-primary)] underline decoration-[var(--p-16)] decoration-1 underline-offset-[3px] hover:decoration-[var(--brand-primary)]"
+          className="pt-2.5 text-sm font-semibold text-[var(--brand-primary)] underline decoration-[var(--p-16)] underline-offset-[3px] hover:decoration-[var(--brand-primary)]"
         >
-          All {unpaid.length} in Plan
+          All {dated.length} in Plan
         </Link>
       )}
     </section>
   )
 }
 
-function TodayDivider() {
+function TodayMarker({ end }: { end?: boolean }) {
   return (
-    <div className="relative my-2 flex items-center">
-      <span className="absolute left-0 -top-1 bg-card pr-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--brand-primary)]">
+    <div className={cn('relative h-0', end ? 'mt-4 mb-2' : 'my-[0.5625rem]')}>
+      <div className="absolute top-0 right-0 -left-5 border-t border-dashed border-[var(--brand-primary)] opacity-45" />
+      <span className="absolute -top-2 -left-5 bg-card pr-2 text-[0.6875rem] font-extrabold tracking-[0.06em] text-[var(--brand-primary)] uppercase">
         Today
       </span>
-      <div className="mt-2 w-full border-t border-dashed border-[var(--brand-primary)] opacity-40" />
     </div>
   )
 }

@@ -1,201 +1,177 @@
 'use client'
 
-import { ReactNode } from 'react'
+import { ReactNode, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useQuery } from 'convex/react'
 import { UserButton, useUser } from '@clerk/nextjs'
-import {
-  Clock,
-  Home,
-  ListChecks,
-  Lock,
-  Plus,
-  Settings,
-  Settings2,
-} from 'lucide-react'
+import { Clock, ListChecks, Lock, Plus, SlidersHorizontal } from 'lucide-react'
 import { api } from '../../convex/_generated/api'
+import { Logo } from '@/components/logo'
+import { MonthProvider, useMonth } from '@/components/month-context'
+import { ModalsProvider, useModals } from '@/components/modals/modals-provider'
+import { ToastProvider } from '@/components/toast'
+import { currentMonthKey, monthName, monthYear } from '@/lib/months'
 import { cn } from '@/lib/utils'
 
-const navDesktop = [
+const nav = [
   { href: '/overview', label: 'Overview', Icon: Clock },
   { href: '/plan', label: 'Plan', Icon: ListChecks },
 ] as const
 
-const navMobile = [
-  { href: '/overview', label: 'Overview', Icon: Home },
-  { href: '/plan', label: 'Plan', Icon: ListChecks },
-  { href: '/settings', label: 'Settings', Icon: Settings },
-] as const
-
-const MONTHS_LONG = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-]
-
-function currentMonthKey() {
-  const d = new Date()
-  const m = String(d.getUTCMonth() + 1).padStart(2, '0')
-  return `${d.getUTCFullYear()}-${m}`
-}
+const tabs = [...nav, { href: '/settings', label: 'Settings', Icon: SlidersHorizontal }] as const
 
 export function AppShell({ children }: { children: ReactNode }) {
+  return (
+    <MonthProvider>
+      <ToastProvider>
+        <ModalsProvider>
+          <Shell>{children}</Shell>
+        </ModalsProvider>
+      </ToastProvider>
+    </MonthProvider>
+  )
+}
+
+function Shell({ children }: { children: ReactNode }) {
   const path = usePathname() ?? '/'
-  const months = useQuery(api.months.listForUser) ?? []
-  const current = currentMonthKey()
   const { user } = useUser()
-  const displayName =
-    user?.firstName ?? user?.fullName ?? user?.primaryEmailAddress?.emailAddress ?? 'Account'
+  const displayName = user?.firstName ?? user?.fullName ?? 'Account'
+  const isActive = (href: string) => path === href || path.startsWith(href + '/')
 
   return (
-    <div className="flex min-h-screen w-full flex-col md:flex-row bg-[var(--side)]">
-      <aside className="hidden md:flex sticky top-0 h-screen w-[220px] shrink-0 flex-col justify-between bg-[var(--side)] px-4 py-6">
-        <div className="flex flex-col gap-6">
-          <Link
-            href="/overview"
-            className="block px-3 pb-2 font-semibold tracking-[0.18em] text-[var(--brand-primary)]"
-            style={{ fontSize: 15 }}
-          >
-            PREALLO
-          </Link>
-          <nav className="flex flex-col gap-1">
-            {navDesktop.map(({ href, label, Icon }) => {
-              const active = path === href || path.startsWith(href + '/')
-              return (
-                <Link
-                  key={href}
-                  href={href}
+    <div className="flex min-h-screen w-full flex-col bg-[var(--side)] lg:flex-row">
+      <aside className="sticky top-0 hidden h-screen w-[14.7rem] shrink-0 flex-col justify-between py-5 pl-5 lg:flex">
+        <div className="flex min-h-0 flex-col">
+          <Logo />
+          <nav className="flex flex-col gap-1.5">
+            {nav.map(({ href, label, Icon }) => (
+              <Link
+                key={href}
+                href={href}
+                className={cn(
+                  'flex h-[2.36rem] items-center gap-3 rounded-[var(--radius-2)] px-3 text-[0.9375rem] transition-colors duration-[120ms]',
+                  isActive(href)
+                    ? 'bg-[var(--p-06)] font-medium text-[var(--text)]'
+                    : 'text-[var(--text)] hover:bg-[var(--p-04)]',
+                )}
+              >
+                <Icon
                   className={cn(
-                    'flex h-9 items-center gap-3 rounded-[var(--radius-3)] px-3 text-sm transition-colors duration-[120ms]',
-                    active
-                      ? 'bg-[var(--p-06)] font-medium text-[var(--text)]'
-                      : 'text-[var(--muted-foreground)] hover:bg-[var(--p-04)]',
+                    'size-[1.18rem]',
+                    isActive(href) ? 'text-[var(--text)]' : 'text-[var(--muted-foreground)]',
                   )}
-                >
-                  <Icon size={16} />
-                  {label}
-                </Link>
-              )
-            })}
+                />
+                {label}
+              </Link>
+            ))}
           </nav>
-          <MonthsNav months={months} current={current} />
+          <MonthsNav />
         </div>
-        <div className="flex items-center justify-between gap-2 px-1 pt-2">
+        <div className="flex h-8 items-center justify-between gap-2 px-2">
           <div className="flex min-w-0 items-center gap-2.5">
-            <UserButton
-              appearance={{ elements: { userButtonAvatarBox: 'size-7' } }}
-            />
-            <span className="truncate text-sm text-[var(--text)]">
-              {displayName}
-            </span>
+            <UserButton appearance={{ elements: { userButtonAvatarBox: 'size-[1.4rem]' } }} />
+            <span className="truncate text-sm text-[var(--text)]">{displayName}</span>
           </div>
           <Link
             href="/settings"
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-3)] text-[var(--muted-foreground)] hover:bg-[var(--p-06)]"
             aria-label="Settings"
+            className={cn(
+              'grid size-7 shrink-0 place-items-center rounded-[var(--radius-2)] transition-colors duration-[120ms] hover:bg-[var(--p-06)]',
+              isActive('/settings') ? 'text-[var(--text)]' : 'text-[var(--muted-foreground)]',
+            )}
           >
-            <Settings2 size={14} />
+            <SlidersHorizontal className="size-4" />
           </Link>
         </div>
       </aside>
 
-      <main className="flex-1 bg-background pb-20 md:my-3 md:mr-3 md:rounded-[var(--radius-5)] md:border md:border-[var(--line)] md:pb-0">
+      <main className="min-w-0 flex-1 bg-background pb-[5.5rem] lg:m-5 lg:rounded-[var(--radius-5)] lg:pb-0 lg:shadow-[inset_0_0_0_1px_var(--line)]">
         {children}
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-[var(--line)] bg-[color-mix(in_srgb,var(--background)_88%,transparent)] py-2 backdrop-blur md:hidden">
-        {navMobile.map(({ href, label, Icon }) => {
-          const active = path === href || path.startsWith(href + '/')
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                'flex min-w-16 flex-col items-center gap-0.5 rounded-[var(--radius-3)] px-3 py-1.5 text-xs transition-colors duration-[120ms]',
-                active
-                  ? 'text-[var(--brand-primary)]'
-                  : 'text-[var(--muted-foreground)]',
-              )}
-            >
-              <Icon size={18} />
-              {label}
-            </Link>
-          )
-        })}
+      <nav
+        aria-label="Main"
+        className="fixed right-0 bottom-0 left-0 z-40 flex h-[4.75rem] border-t border-[var(--line)] bg-[color-mix(in_srgb,var(--background)_88%,transparent)] px-1.5 pt-1.5 pb-[calc(env(safe-area-inset-bottom)+0.875rem)] backdrop-blur-xl backdrop-saturate-[1.8] lg:hidden"
+      >
+        {tabs.map(({ href, label, Icon }) => (
+          <Link
+            key={href}
+            href={href}
+            className={cn(
+              'flex flex-1 flex-col items-center justify-center gap-0.5 rounded-[var(--radius-5)] text-[0.6875rem] font-semibold transition-colors duration-[120ms]',
+              isActive(href) ? 'text-[var(--brand-primary)]' : 'text-[var(--muted-foreground)]',
+            )}
+          >
+            <Icon className="size-[1.4rem]" />
+            {label}
+          </Link>
+        ))}
       </nav>
     </div>
   )
 }
 
-function MonthsNav({
-  months,
-  current,
-}: {
-  months: Array<{ key: string; imported: boolean }>
-  current: string
-}) {
-  const items = months.slice(0, 5)
+function MonthsNav() {
+  const months = useQuery(api.months.listForUser) ?? []
+  const { monthKey, setMonthKey } = useMonth()
+  const { startMonth } = useModals()
+  const [showAll, setShowAll] = useState(false)
+  const today = currentMonthKey()
+  const shown = showAll ? months : months.slice(0, 5)
+
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between px-3 text-xs font-semibold uppercase tracking-[0.07em] text-[var(--muted-foreground)]">
+    <div className="mt-6 flex min-h-0 flex-col">
+      <div className="mb-1 flex h-7 items-center justify-between pl-3.5 text-[0.9375rem] text-[var(--muted-foreground)]">
         <span>Months</span>
         <button
-          aria-label="New month"
-          className="flex h-5 w-5 items-center justify-center rounded text-[var(--muted-foreground)] hover:bg-[var(--p-06)] hover:text-[var(--text)]"
+          aria-label="Start a new month"
+          onClick={() => startMonth()}
+          className="grid size-7 place-items-center rounded-[var(--radius-2)] transition-colors duration-[120ms] hover:bg-[var(--p-06)] hover:text-[var(--text)]"
         >
-          <Plus size={12} />
+          <Plus className="size-3.5" />
         </button>
       </div>
-      <ul className="flex flex-col">
-        {items.map((m) => {
-          const [y, mm] = m.key.split('-')
-          const active = m.key === current
-          const past = m.key < current
+      <ul className="flex min-h-0 flex-col overflow-y-auto">
+        {shown.map((m) => {
+          const active = m.key === monthKey
+          const past = m.key < today
+          const future = m.key > today
           return (
             <li key={m.key}>
-              <button className="flex w-full items-center gap-3 rounded-[var(--radius-3)] px-3 py-2 text-left text-sm transition-colors duration-[120ms] hover:bg-[var(--p-04)]">
+              <button
+                onClick={() => setMonthKey(m.key)}
+                aria-current={active ? 'true' : undefined}
+                className="flex h-10 w-full items-center gap-2.5 rounded-[var(--radius-2)] px-3 text-left text-[0.9375rem] transition-colors duration-[120ms] hover:bg-[var(--p-04)]"
+              >
                 <span
                   className={cn(
-                    'h-2 w-2 rounded-full',
+                    'size-[0.59rem] shrink-0 rounded-full',
                     active
                       ? 'bg-[var(--brand-primary)]'
-                      : past
-                        ? 'bg-[var(--p-16)]'
-                        : 'border border-[var(--p-16)]',
+                      : future
+                        ? 'border border-[var(--p-60)]'
+                        : 'bg-[var(--p-16)]',
                   )}
                 />
-                <span
-                  className={cn(
-                    'flex-1',
-                    active
-                      ? 'font-medium text-[var(--text)]'
-                      : 'text-[var(--muted-foreground)]',
-                  )}
-                >
-                  {MONTHS_LONG[Number(mm) - 1]}{' '}
-                  <span className="text-xs">{y}</span>
+                <span className={cn('flex-1', active ? 'font-semibold text-[var(--text)]' : 'text-[var(--text)]')}>
+                  {monthName(m.key)}{' '}
+                  <span className="text-[0.8125rem] text-[var(--muted-foreground)]">{monthYear(m.key)}</span>
                 </span>
-                {past && (
-                  <Lock
-                    size={12}
-                    className="text-[var(--muted-foreground)]"
-                  />
-                )}
+                {past && <Lock className="size-3 text-[var(--muted-foreground)]" />}
               </button>
             </li>
           )
         })}
       </ul>
+      {months.length > 5 && (
+        <button
+          onClick={() => setShowAll((v) => !v)}
+          className="mt-1 h-8 rounded-[var(--radius-2)] px-3 text-left text-sm text-[var(--muted-foreground)] transition-colors duration-[120ms] hover:bg-[var(--p-04)] hover:text-[var(--text)]"
+        >
+          {showAll ? 'Show less' : 'Show all months'}
+        </button>
+      )}
     </div>
   )
 }

@@ -1,128 +1,83 @@
 'use client'
 
 import { useQuery } from 'convex/react'
-import { Plus } from 'lucide-react'
 import { api } from '../../../../convex/_generated/api'
 import { HeroCard } from '@/components/overview/hero-card'
-import { BucketCard, type Bucket } from '@/components/overview/bucket-card'
+import { BucketCard } from '@/components/overview/bucket-card'
 import { GoalsRingCard } from '@/components/overview/goals-ring-card'
 import { ComingUp } from '@/components/overview/coming-up'
+import { OverviewSkeleton } from '@/components/overview/overview-skeleton'
+import { MonthHeader } from '@/components/month-header'
+import { useMonth } from '@/components/month-context'
+import type { Bucket } from '@/lib/months'
 
-function currentMonthKey() {
-  const d = new Date()
-  const m = String(d.getUTCMonth() + 1).padStart(2, '0')
-  return `${d.getUTCFullYear()}-${m}`
-}
-
-const MONTHS_LONG = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-]
+const BUCKETS: Bucket[] = ['needs', 'wants', 'savings']
 
 export default function OverviewPage() {
-  const key = currentMonthKey()
+  const { monthKey: key } = useMonth()
   const summary = useQuery(api.months.summary, { key })
   const items = useQuery(api.items.listForMonth, { monthKey: key })
-  const needsHistory = useQuery(api.months.bucketHistory, {
-    key,
-    bucket: 'needs',
-    months: 3,
-  })
-  const wantsHistory = useQuery(api.months.bucketHistory, {
-    key,
-    bucket: 'wants',
-    months: 3,
-  })
-  const savingsHistory = useQuery(api.months.bucketHistory, {
-    key,
-    bucket: 'savings',
-    months: 3,
-  })
+  const needs = useQuery(api.months.bucketHistory, { key, bucket: 'needs', months: 3 })
+  const wants = useQuery(api.months.bucketHistory, { key, bucket: 'wants', months: 3 })
+  const savings = useQuery(api.months.bucketHistory, { key, bucket: 'savings', months: 3 })
+  const history = { needs, wants, savings }
 
-  if (summary === undefined || items === undefined) {
-    return (
-      <div className="mx-auto w-full max-w-7xl p-5 md:p-8">
-        <div className="h-8 w-40 animate-pulse rounded bg-[var(--p-06)]" />
-      </div>
-    )
-  }
-
-  if (summary === null) {
-    return (
-      <div className="mx-auto w-full max-w-7xl p-5 md:p-8">
-        <p className="text-sm text-[var(--muted-foreground)]">
-          Setting up your first month.
-        </p>
-      </div>
-    )
-  }
-
-  const { totals, income, reserved, free, pct, goals, paid, payable, missing } =
-    summary
-  const missingCount = missing
-  const [year, m] = key.split('-')
-  const monthName = MONTHS_LONG[Number(m) - 1]
-
-  const historyByBucket: Record<Bucket, typeof needsHistory> = {
-    needs: needsHistory,
-    wants: wantsHistory,
-    savings: savingsHistory,
-  }
+  const loading = summary === undefined || items === undefined
 
   return (
-    <div className="mx-auto w-full max-w-7xl p-5 md:p-8">
-      <header className="mb-6 flex items-center gap-3">
-        <button
-          aria-label="New item or month"
-          className="flex h-10 w-10 items-center justify-center rounded-full text-[var(--text)] transition-colors duration-[120ms] hover:bg-[var(--p-06)]"
-        >
-          <Plus size={18} />
-        </button>
-        <h1 className="flex items-baseline gap-2 text-[22px] font-semibold tracking-[-0.02em] text-[var(--text)]">
-          {monthName}
-          <span className="text-sm font-medium text-[var(--muted-foreground)]">
-            {year}
-          </span>
-        </h1>
-      </header>
-
-      <div className="grid gap-5 md:grid-cols-[1.4fr_1fr] md:gap-6">
-        <div className="flex flex-col gap-4">
-          <HeroCard
-            free={free}
-            income={income}
-            reserved={reserved}
-            missingCount={missingCount}
-            paid={paid}
-            payable={payable}
-          />
-          {(['needs', 'wants', 'savings'] as Bucket[]).map((b) => (
-            <BucketCard
-              key={b}
-              bucket={b}
-              amount={totals[b]}
-              pct={pct[b]}
-              goal={goals[b]}
-              history={historyByBucket[b] ?? []}
-            />
-          ))}
-        </div>
-
-        <div className="flex flex-col gap-4">
-          <GoalsRingCard pct={pct} goals={goals} />
-          <ComingUp items={items} monthKey={key} />
-        </div>
+    <>
+      <MonthHeader />
+      <div className="px-4 pt-2 pb-8 lg:px-7 lg:pt-2.5 lg:pb-7">
+        {loading ? (
+          <OverviewSkeleton />
+        ) : summary === null ? (
+          <p className="text-sm text-[var(--muted-foreground)]">
+            No budget for this month yet. Use + to start it.
+          </p>
+        ) : (
+          <div className="grid gap-6 lg:grid-cols-[672fr_486fr]">
+            <div className="contents lg:flex lg:flex-col lg:gap-6">
+              <HeroCard
+                monthKey={key}
+                free={summary.free}
+                income={summary.income}
+                reserved={summary.reserved}
+                missingCount={summary.missing}
+                paid={summary.paid}
+                payable={summary.payable}
+              />
+              <div className="order-3 flex flex-col gap-6 lg:order-none">
+                {summary.fromHistory && summary.unreviewed > 0 && (
+                  <a
+                    href="/import"
+                    className="rounded-[var(--radius-4)] bg-[var(--needs-soft)] px-5 py-3 text-sm text-[var(--needs-ink)]"
+                  >
+                    {summary.unreviewed} imported rows have no bucket yet and are left out of these totals. Review them.
+                  </a>
+                )}
+                {BUCKETS.map((b) => (
+                  <BucketCard
+                    key={b}
+                    bucket={b}
+                    amount={summary.totals[b]}
+                    pct={summary.pct[b]}
+                    goal={summary.goals[b]}
+                    history={history[b] ?? []}
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="contents lg:flex lg:flex-col lg:gap-6">
+              <div className="order-2 lg:order-none">
+                <GoalsRingCard pct={summary.pct} goals={summary.goals} />
+              </div>
+              <div className="order-4 lg:order-none">
+                <ComingUp items={items} monthKey={key} />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
+    </>
   )
 }

@@ -3,7 +3,10 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
 import { ConvexClientProvider } from '@/components/convex-client-provider'
 import { ThemeProvider } from '@/components/theme-provider'
+import { initViewportScale } from '@/lib/viewport-scale'
 import './globals.css'
+
+const viewportScaleScript = `(${initViewportScale})()`
 
 const geistSans = Geist({
   variable: '--font-sans',
@@ -28,6 +31,9 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
         suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       >
+        <head>
+          <script dangerouslySetInnerHTML={{ __html: viewportScaleScript }} />
+        </head>
         <body className="min-h-full flex flex-col bg-background text-foreground">
           <ThemeProvider>
             <ConvexClientProvider>{children}</ConvexClientProvider>

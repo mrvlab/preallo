@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { krw } from '@/lib/format'
 
 export type Bucket = 'needs' | 'wants' | 'savings'
@@ -50,7 +51,11 @@ export function BucketCard({ bucket, amount, pct, goal, history = [] }: Props) {
         : 'text-[var(--muted-foreground)]'
 
   return (
-    <section className="grid grid-cols-[1fr_280px] items-stretch gap-6 rounded-[var(--radius-4)] border border-[var(--line)] bg-card p-5 md:p-6">
+    <Link
+      href={`/plan?b=${bucket}`}
+      aria-label={`${LABELS[bucket]}, ${krw(amount)}. ${sub}. Open list.`}
+      className="grid min-h-[10.2rem] grid-cols-[1fr_minmax(0,23rem)] items-center gap-4 rounded-[var(--radius-4)] bg-card px-5 py-5 shadow-[inset_0_0_0_1px_var(--line)] transition-shadow duration-[120ms] hover:shadow-[inset_0_0_0_1px_var(--p-16)] lg:gap-6 lg:px-7 lg:py-[1.65rem]"
+    >
       <div className="flex flex-col justify-center">
         <div
           className="flex items-center gap-2 text-sm font-semibold"
@@ -68,7 +73,7 @@ export function BucketCard({ bucket, amount, pct, goal, history = [] }: Props) {
         <div className={`mt-2 text-xs ${tone}`}>{sub}</div>
       </div>
       <MiniBars history={history} goal={goal} color={dotVar} bucket={bucket} />
-    </section>
+    </Link>
   )
 }
 

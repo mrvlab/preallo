@@ -43,6 +43,8 @@ export const create = mutation({
     due: v.optional(v.number()),
     savingsSlug: v.optional(v.string()),
     locked: v.optional(v.boolean()),
+    group: v.optional(v.string()),
+    paid: v.optional(v.boolean()),
   },
   returns: v.id('items'),
   handler: async (ctx, args) => {
@@ -57,22 +59,25 @@ export const create = mutation({
       category: args.category,
       due: args.due,
       savingsSlug: args.savingsSlug,
-      paid: false,
+      group: args.group,
+      paid: args.paid ?? false,
       locked: args.locked ?? false,
     })
   },
 })
 
+// null clears a field; an absent key leaves it unchanged.
 export const update = mutation({
   args: {
     id: v.id('items'),
     patch: v.object({
       name: v.optional(v.string()),
-      amount: v.optional(v.number()),
-      category: v.optional(v.string()),
-      due: v.optional(v.number()),
+      amount: v.optional(v.union(v.number(), v.null())),
+      category: v.optional(v.union(v.string(), v.null())),
+      due: v.optional(v.union(v.number(), v.null())),
       locked: v.optional(v.boolean()),
       savingsSlug: v.optional(v.string()),
+      group: v.optional(v.union(v.string(), v.null())),
     }),
   },
   returns: v.null(),
@@ -81,7 +86,10 @@ export const update = mutation({
     if (!userId) throw new Error('Not authenticated')
     const row = await ctx.db.get(id)
     if (!row || row.userId !== userId) throw new Error('Not found')
-    await ctx.db.patch(id, patch)
+    const clean = Object.fromEntries(
+      Object.entries(patch).map(([k, val]) => [k, val === null ? undefined : val]),
+    )
+    await ctx.db.patch(id, clean)
     return null
   },
 })

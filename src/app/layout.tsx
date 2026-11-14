@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
 import { ConvexClientProvider } from '@/components/convex-client-provider'
@@ -35,6 +35,21 @@ export const metadata: Metadata = {
   description,
   openGraph: { type: 'website', siteName: 'Preallo', title: 'Preallo', description },
   twitter: { card: 'summary_large_image', title: 'Preallo', description },
+  // Home-screen web app on iOS: full screen, its own name under the icon, and a status bar
+  // that sits on the page colour.
+  appleWebApp: { capable: true, title: 'Preallo', statusBarStyle: 'default' },
+  formatDetection: { telephone: false },
+  // iOS before 17 only reads the apple- prefixed tag to open full screen.
+  other: { 'apple-mobile-web-app-capable': 'yes' },
+}
+
+export const viewport: Viewport = {
+  // Draw under the notch and home indicator; the layout pads itself with safe-area insets.
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0e1116' },
+  ],
 }
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {

@@ -202,6 +202,21 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* App feel once saved to the home screen: no grey tap flash, no long-press callout on
+     controls, no font inflation on rotate, and no rubber band pulling the whole page. */
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    overscroll-behavior-y: none;
+  }
+  button,
+  a,
+  [role='tab'] {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
   html {
     @apply font-sans;
     /* --sw is set before paint by initViewportScale; every rem value follows it. */

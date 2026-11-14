@@ -1,41 +1,37 @@
 'use client'
 
-import { krw } from '@/lib/format'
+import { BUCKET_LABELS, type Bucket } from '@/lib/months'
 import { cn } from '@/lib/utils'
 
-export type Bucket = 'needs' | 'wants' | 'savings'
+export type { Bucket }
 
-const LABELS: Record<Bucket, string> = {
-  needs: 'Needs',
-  wants: 'Wants',
-  savings: 'Savings',
-}
+const amount = (n: number) => new Intl.NumberFormat('sv-SE', { maximumFractionDigits: 0 }).format(n)
 
-type Props = {
+export function BucketChip({
+  bucket,
+  total,
+  active,
+  onClick,
+}: {
   bucket: Bucket
   total: number
   active?: boolean
   onClick?: () => void
-}
-
-export function BucketChip({ bucket, total, active, onClick }: Props) {
+}) {
   return (
     <button
       onClick={onClick}
-      className={cn(
-        'flex items-center gap-2 rounded-[var(--radius-3)] px-3 h-9 text-sm font-medium transition-colors duration-[120ms]',
-        active
-          ? 'bg-[var(--brand-primary)] text-white'
-          : 'bg-[var(--p-06)] text-[var(--text)] hover:bg-[var(--p-10)]',
-      )}
       aria-pressed={active}
+      className={cn(
+        'flex h-[2.125rem] items-center gap-2 rounded-[var(--radius-3)] px-3.5 text-[0.9375rem] font-medium transition-colors duration-[120ms]',
+        active
+          ? 'bg-[var(--brand-primary)] text-[var(--primary-foreground)]'
+          : 'bg-[var(--p-04)] text-[var(--text)] hover:bg-[var(--p-06)]',
+      )}
     >
-      <i
-        className="h-2 w-2 rounded-full"
-        style={{ background: `var(--${bucket})` }}
-      />
-      {LABELS[bucket]}
-      <span className="ml-1 tabular-nums opacity-80">{krw(total)}</span>
+      <i className="size-2 rounded-full" style={{ background: active ? 'currentColor' : `var(--${bucket})`, opacity: active ? 0.9 : 1 }} />
+      {BUCKET_LABELS[bucket]}
+      <small className="text-[0.78rem] font-semibold tabular-nums opacity-75">{amount(total)}</small>
     </button>
   )
 }

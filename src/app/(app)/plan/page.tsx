@@ -142,10 +142,12 @@ export default function PlanPage() {
             </div>
           ) : (
             <SideBox
+              bucket={active}
               paidCount={activeItems.filter((i) => i.paid).length}
               itemCount={activeItems.length}
               planned={totals[active]}
-              goal={summary.goalAmt[active]}
+              goalAmount={summary.goalAmt[active]}
+              goalPct={summary.goals[active]}
               pctOfSalary={summary.pct[active]}
             />
           )}

@@ -1,0 +1,404 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #1a2130;
+  --card: #ffffff;
+  --card-foreground: #1a2130;
+  --popover: #ffffff;
+  --popover-foreground: #1a2130;
+  --primary: #24324a;
+  --primary-foreground: #ffffff;
+  --secondary: #f7f7f8;
+  --secondary-foreground: #1a2130;
+  --muted: #f7f7f8;
+  --muted-foreground: #6b7280;
+  --accent: rgba(36, 50, 74, 0.06);
+  --accent-foreground: #24324a;
+  --destructive: #de5a50;
+  --border: rgba(36, 50, 74, 0.1);
+  --input: rgba(36, 50, 74, 0.1);
+  --ring: #24324a;
+  --chart-1: #24324a;
+  --chart-2: #d9912a;
+  --chart-3: #de5a50;
+  --chart-4: #2fa574;
+  --chart-5: #7a8ba3;
+  --radius: 0.5rem;
+  --sidebar: #f7f7f8;
+  --sidebar-foreground: #1a2130;
+  --sidebar-primary: #24324a;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(36, 50, 74, 0.06);
+  --sidebar-accent-foreground: #24324a;
+  --sidebar-border: rgba(36, 50, 74, 0.1);
+  --sidebar-ring: #24324a;
+
+  /* Prototype brand palette */
+  --brand-primary: #24324a;
+  --brand-secondary: #7a8ba3;
+  --brand-accent: #2fa574;
+  --brand-base: #ffffff;
+
+  /* Navy-rgba hairline scale */
+  --p-04: rgba(36, 50, 74, 0.04);
+  --p-06: rgba(36, 50, 74, 0.06);
+  --p-10: rgba(36, 50, 74, 0.1);
+  --p-16: rgba(36, 50, 74, 0.16);
+  --p-60: rgba(36, 50, 74, 0.6);
+
+  /* Bucket colors */
+  --needs: #d9912a;
+  --needs-soft: rgba(217, 145, 42, 0.12);
+  --needs-ink: #8a5a1c;
+  --wants: #de5a50;
+  --wants-soft: rgba(222, 90, 80, 0.12);
+  --wants-ink: #9a3a33;
+  --savings: #2fa574;
+  --savings-soft: rgba(47, 165, 116, 0.12);
+  --savings-ink: #1f7a55;
+
+  /* Status */
+  --ok: #2e7a5c;
+  --warn: #a8433b;
+  --amber: #8a5a1c;
+  --rest: #d5d9e0;
+  --com: #5b6478;
+
+  /* Concentric radii: card 8, button 6, input 4, nested 4 */
+  --radius-1: 3px;
+  --radius-2: 4px;
+  --radius-3: 6px;
+  --radius-4: 8px;
+  --radius-5: 12px;
+
+  /* Semantic aliases for shells */
+  --side: #f7f7f8;
+  --hero-bg: var(--p-04);
+  --line: var(--p-10);
+  --text: #1a2130;
+  --muted-ink: #6b7280;
+}
+
+.dark {
+  --background: #0e1116;
+  --foreground: #edf0f4;
+  --card: #151a21;
+  --card-foreground: #edf0f4;
+  --popover: #151a21;
+  --popover-foreground: #edf0f4;
+  --primary: #c9d3e3;
+  --primary-foreground: #0e1116;
+  --secondary: #151a21;
+  --secondary-foreground: #edf0f4;
+  --muted: #151a21;
+  --muted-foreground: #9aa3b2;
+  --accent: rgba(201, 211, 227, 0.08);
+  --accent-foreground: #c9d3e3;
+  --destructive: #d47b75;
+  --border: rgba(201, 211, 227, 0.12);
+  --input: rgba(201, 211, 227, 0.12);
+  --ring: #c9d3e3;
+  --chart-1: #c9d3e3;
+  --chart-2: #d9a05a;
+  --chart-3: #d47b75;
+  --chart-4: #5fb08e;
+  --chart-5: #7d8fa8;
+  --sidebar: #0b0e12;
+  --sidebar-foreground: #edf0f4;
+  --sidebar-primary: #c9d3e3;
+  --sidebar-primary-foreground: #0e1116;
+  --sidebar-accent: rgba(201, 211, 227, 0.08);
+  --sidebar-accent-foreground: #c9d3e3;
+  --sidebar-border: rgba(201, 211, 227, 0.12);
+  --sidebar-ring: #c9d3e3;
+
+  --brand-primary: #c9d3e3;
+  --brand-secondary: #7d8fa8;
+  --brand-accent: #5fb08e;
+  --brand-base: #0e1116;
+
+  --p-04: rgba(201, 211, 227, 0.05);
+  --p-06: rgba(201, 211, 227, 0.08);
+  --p-10: rgba(201, 211, 227, 0.12);
+  --p-16: rgba(201, 211, 227, 0.18);
+  --p-60: rgba(201, 211, 227, 0.6);
+
+  --needs: #d9a05a;
+  --needs-soft: rgba(217, 160, 90, 0.14);
+  --needs-ink: #e8bd82;
+  --wants: #d47b75;
+  --wants-soft: rgba(212, 123, 117, 0.14);
+  --wants-ink: #eba5a0;
+  --savings: #2fa574;
+  --savings-soft: rgba(47, 165, 116, 0.14);
+  --savings-ink: #7fcba9;
+
+  --ok: #7fcba9;
+  --warn: #e8928b;
+  --amber: #e2b86a;
+  --rest: #2a313b;
+  --com: #8a93ab;
+
+  --side: #0b0e12;
+  --hero-bg: var(--p-04);
+  --line: var(--p-10);
+  --text: #edf0f4;
+  --muted-ink: #9aa3b2;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  /* App feel once saved to the home screen: no grey tap flash, no long-press callout on
+     controls, no font inflation on rotate, and no rubber band pulling the whole page. */
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    overscroll-behavior-y: none;
+  }
+  button,
+  a,
+  [role='tab'] {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  html {
+    @apply font-sans;
+    /* --sw is set before paint by initViewportScale; every rem value follows it. */
+    font-size: calc(100% * var(--sw, 1));
+  }
+}
+
+/* Modal: centered dialog on desktop, bottom sheet on mobile. Easing from the prototype. */
+:root {
+  --shadow-6: 0 0 0 1px var(--p-10), 0 12px 24px -6px rgba(0, 0, 0, 0.12),
+    0 16px 48px -12px rgba(0, 0, 0, 0.12);
+}
+.pa-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(0, 0, 0, 0.38);
+}
+.pa-overlay[data-state='open'] {
+  animation: pa-fade-in 0.28s ease;
+}
+.pa-overlay[data-state='closed'] {
+  animation: pa-fade-out 0.2s ease;
+}
+.pa-sheet {
+  position: fixed;
+  z-index: 51;
+  display: flex;
+  flex-direction: column;
+  background: var(--background);
+  box-shadow: var(--shadow-6);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 92dvh;
+  border-radius: var(--radius-5) var(--radius-5) 0 0;
+}
+.pa-sheet[data-state='open'] {
+  animation: pa-sheet-in-mob 0.4s cubic-bezier(0.2, 0.9, 0.25, 1);
+}
+.pa-sheet[data-state='closed'] {
+  animation: pa-sheet-out-mob 0.25s ease-in;
+}
+@media (min-width: 768px) {
+  .pa-sheet {
+    left: 50%;
+    right: auto;
+    top: 50%;
+    bottom: auto;
+    width: 520px;
+    max-height: 88vh;
+    border-radius: var(--radius-5);
+    transform: translate(-50%, -50%);
+    transform-origin: var(--pa-origin, center);
+  }
+  .pa-sheet[data-state='open'] {
+    animation: pa-sheet-in-desk 0.4s cubic-bezier(0.2, 0.9, 0.25, 1);
+  }
+  .pa-sheet[data-state='closed'] {
+    animation: pa-sheet-out-desk 0.2s ease-in;
+  }
+}
+@keyframes pa-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes pa-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes pa-sheet-in-mob {
+  from { transform: translateY(105%); }
+  to { transform: none; }
+}
+@keyframes pa-sheet-out-mob {
+  from { transform: none; }
+  to { transform: translateY(105%); }
+}
+/* Desktop: the dialog grows out of the control that opened it and shrinks back into it.
+   --pa-origin is set from the last press; without one it grows from its own centre. */
+@keyframes pa-sheet-in-desk {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+  to { opacity: 1; transform: translate(-50%, -50%); }
+}
+@keyframes pa-sheet-out-desk {
+  from { opacity: 1; transform: translate(-50%, -50%); }
+  to { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+}
+
+/* Toast: dark pill above the tab bar on mobile, bottom-centre on desktop. */
+.pa-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 92px;
+  z-index: 60;
+  transform: translateX(-50%) translateY(20px);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.3s cubic-bezier(0.2, 0.9, 0.25, 1),
+    transform 0.3s cubic-bezier(0.2, 0.9, 0.25, 1);
+}
+.pa-toast[data-show='true'] {
+  opacity: 1;
+  transform: translateX(-50%);
+  pointer-events: auto;
+}
+@media (min-width: 768px) {
+  .pa-toast {
+    bottom: 28px;
+  }
+}
+
+/* Press feedback lands on pointer-down, instantly. Full-width rows skip the scale (it would
+   shift their edges) and rely on their background highlight instead. */
+button:not(:disabled):not(.w-full):not([data-press]):active,
+[role='tab']:not(:disabled):active {
+  scale: 0.97;
+}
+/* Whole cards give way only slightly, so the page does not appear to shrink. */
+[data-press='card']:not(:disabled):active {
+  scale: 0.99;
+}
+
+/* While the sheet is being dragged it follows the finger; no keyframes may fight it. */
+.pa-sheet[data-dragging='true'],
+.pa-sheet[data-dragged='true'][data-state='open'] {
+  animation: none !important;
+}
+
+/* Reduced motion keeps the feedback but swaps movement for a short cross-fade. */
+@media (prefers-reduced-motion: reduce) {
+  .pa-sheet[data-state='open'] {
+    animation: pa-fade-in 0.2s ease !important;
+  }
+  .pa-sheet[data-state='closed'] {
+    animation: pa-fade-out 0.15s ease !important;
+  }
+  .pa-toast {
+    transition: opacity 0.2s ease;
+  }
+  button:active,
+  [role='tab']:active,
+  [data-press='card']:active {
+    scale: none !important;
+  }
+}
+
+/* Scroll edge: instead of a hard line, the bar's material feathers out over the content
+   scrolling under it, blurring it a little more the closer it gets to the bar. */
+.pa-edge::before {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: 100%;
+  height: 14px;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--background) 70%, transparent);
+  backdrop-filter: blur(12px) saturate(1.8);
+  -webkit-backdrop-filter: blur(12px) saturate(1.8);
+  mask-image: linear-gradient(to top, black, transparent);
+  -webkit-mask-image: linear-gradient(to top, black, transparent);
+}
+
+/* Translucent chrome goes solid when the system asks for less transparency or more contrast. */
+@media (prefers-reduced-transparency: reduce) {
+  .pa-material {
+    background: var(--background) !important;
+    backdrop-filter: none !important;
+    border-top: 1px solid var(--line);
+  }
+  .pa-edge::before {
+    display: none;
+  }
+}
+@media (prefers-contrast: more) {
+  .pa-material {
+    background: var(--background) !important;
+    backdrop-filter: none !important;
+    border-top: 1px solid var(--p-60);
+  }
+  .pa-edge::before {
+    display: none;
+  }
+}

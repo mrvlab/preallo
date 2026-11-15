@@ -84,3 +84,26 @@ export const applyToPlan = internalMutation({
     return patched
   },
 })
+
+// Sets each month's salary to what actually arrived (Lön plus Studiestöd in that pay period).
+// Locked months can't be changed from the app, so this runs from the CLI.
+export const setIncomes = internalMutation({
+  args: {
+    userId: v.id('users'),
+    rows: v.array(v.object({ key: v.string(), income: v.number() })),
+  },
+  returns: v.number(),
+  handler: async (ctx, { userId, rows }) => {
+    let patched = 0
+    for (const { key, income } of rows) {
+      const month = await ctx.db
+        .query('months')
+        .withIndex('byUserKey', (q) => q.eq('userId', userId).eq('key', key))
+        .unique()
+      if (!month) continue
+      await ctx.db.patch(month._id, { income })
+      patched++
+    }
+    return patched
+  },
+})

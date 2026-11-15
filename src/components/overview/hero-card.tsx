@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { krw } from '@/lib/format'
-import { daysLeftInPeriod, daysUntilStart, periodDays, periodRange } from '@/lib/months'
+import { daysLeftInPeriod, daysUntilStart, periodDays } from '@/lib/months'
 import { useMonth } from '@/components/month-context'
 import { RollingDigits } from '@/components/motion/rolling-digits'
 import { useModals } from '@/components/modals/modals-provider'
@@ -28,11 +28,12 @@ export function HeroCard({ monthKey, free, income, reserved, missingCount, paid,
   const { todayKey, payday, editable } = useMonth()
   const past = monthKey < todayKey
   const future = monthKey > todayKey
-  const range = periodRange(monthKey, payday)
   const daysLeft = daysLeftInPeriod(monthKey, payday)
   const startsIn = daysUntilStart(monthKey, payday)
-  // A running budget divides by the weeks left until payday; others by their full length.
-  const weeks = Math.max(1, past || future ? Math.round(periodDays(monthKey, payday) / 7) : Math.ceil(daysLeft / 7))
+  // Week view spreads the money over the exact days it has to last (a running budget, the days
+  // until payday; others, their full length, 28 to 31 days), never over less than one week.
+  const span = past || future ? periodDays(monthKey, payday) : daysLeft
+  const weeks = Math.max(1, span / 7)
   const dayInPeriod = periodDays(monthKey, payday) - daysLeft + 1
   const neg = free < 0
   // Exact early in the cycle or while the plan is incomplete; softened to the nearest 100 otherwise.
@@ -45,14 +46,16 @@ export function HeroCard({ monthKey, free, income, reserved, missingCount, paid,
     ? 'Your plan needs more than your salary'
     : past
       ? view === 'week'
-        ? `a week, over the ${plural(weeks, 'week')} of ${range}`
-        : `${range}, now ended`
+        ? `a week, over ${plural(span, 'day')}`
+        : 'this month has ended'
       : future
         ? view === 'week'
-          ? `a week, over the ${plural(weeks, 'week')} of ${range}`
-          : `for ${range}. Starts on payday${startsIn > 0 ? `, in ${plural(startsIn, 'day')}` : ''}`
+          ? `a week, over ${plural(span, 'day')}`
+          : startsIn === 1
+            ? 'starts tomorrow'
+            : `starts in ${plural(startsIn, 'day')}`
         : view === 'week'
-          ? `a week, for the next ${plural(weeks, 'week')}`
+          ? `a week, for the next ${plural(span, 'day')}`
           : `for the next ${plural(daysLeft, 'day')}`
 
   return (

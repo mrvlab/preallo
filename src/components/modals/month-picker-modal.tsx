@@ -63,7 +63,7 @@ export function MonthPickerModal({
               onClick={() => (has ? onPick(key) : onStart(key))}
               aria-label={`${monthName(key)} ${year}, ${has ? 'has a budget' : closed ? 'no budget, closed' : 'new month'}`}
               className={cn(
-                'relative rounded-[var(--radius-2)] px-2 py-3.5 text-center text-base font-extrabold transition-[outline-color] duration-[120ms] disabled:pointer-events-none disabled:opacity-35',
+                'relative flex min-h-[4.5rem] flex-col items-center justify-center rounded-[var(--radius-2)] px-2 py-3.5 text-center text-base font-extrabold transition-[outline-color] duration-[120ms] disabled:pointer-events-none disabled:opacity-35',
                 on
                   ? 'bg-[var(--brand-primary)] text-[var(--primary-foreground)]'
                   : has

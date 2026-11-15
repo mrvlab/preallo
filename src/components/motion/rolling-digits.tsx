@@ -84,7 +84,7 @@ function Digit({
   )
 }
 
-function usePrefersReducedMotion() {
+export function usePrefersReducedMotion() {
   return useSyncExternalStore(
     (onChange) => {
       const mq = window.matchMedia('(prefers-reduced-motion: reduce)')

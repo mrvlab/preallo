@@ -19,6 +19,7 @@ export function OverviewSkeleton() {
       <div className="flex flex-col gap-6">
         <RingsSkeleton />
         <ComingUpSkeleton />
+        <CategoriesSkeleton />
       </div>
     </div>
   )
@@ -114,6 +115,36 @@ function ComingUpSkeleton() {
             <TextBone className="font-medium" w={['6em', '8em', '5em', '7em'][i]} shade="mid" />
             <TextBone className="font-semibold" w="3em" shade="mid" />
           </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function CategoriesSkeleton() {
+  return (
+    <section className="flex flex-col rounded-[var(--radius-4)] bg-card px-5 py-5 shadow-[inset_0_0_0_1px_var(--line)] lg:px-7 lg:py-[1.65rem]">
+      <TextBone className={eyebrow} w="6.5em" shade="soft" />
+      <div className="mt-1 mb-[1.125rem] flex flex-wrap items-baseline gap-2">
+        <TextBone className="text-2xl font-bold" w="3.2em" shade="strong" />
+        <TextBone className="text-sm" w="13em" shade="soft" />
+      </div>
+      <div className="flex flex-col gap-3.5">
+        {['w-full', 'w-[62%]', 'w-[41%]', 'w-[28%]', 'w-[16%]'].map((w, i) => (
+          <div key={w}>
+            <div className="mb-1.5 flex items-baseline justify-between gap-3 text-sm">
+              <TextBone className="font-medium" w={['4em', '3.5em', '5em', '4.5em', '3em'][i]} shade="mid" />
+              <TextBone className="font-semibold" w="5.5em" shade="mid" />
+            </div>
+            <div className="h-2 rounded-full bg-[var(--p-04)]">
+              <Bone className={`h-full rounded-full ${w}`} shade="soft" />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-5 flex gap-4 border-t border-[var(--line)] pt-4 text-[0.8125rem]">
+        {[0, 1, 2].map((i) => (
+          <TextBone key={i} w="4em" shade="soft" />
         ))}
       </div>
     </section>

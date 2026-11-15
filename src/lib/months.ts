@@ -84,7 +84,11 @@ export function dueDate(key: string, day: number, payday: number) {
 }
 
 export function dayLabel(key: string, day: number, payday: number) {
-  const d = dueDate(key, day, payday)
+  return dateLabel(dueDate(key, day, payday))
+}
+
+// "Sat 28 Nov"
+export function dateLabel(d: Date) {
   return `${WEEKDAY_SHORT[d.getDay()]} ${shortDate(d)}`
 }
 

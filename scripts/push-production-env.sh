@@ -14,10 +14,13 @@ SCOPE=marvinxkiyingis-projects
 PROJECT=preallo-qa
 FILE=.env.production.local
 KEYS=(NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY CLERK_SECRET_KEY)
+# The shell function that picks the personal Vercel login does not reach scripts.
+VERCEL=(vercel)
+[ -d "$HOME/.vercel-personal" ] && VERCEL+=(--global-config "$HOME/.vercel-personal")
 
 [ -f "$FILE" ] || { echo "Create $FILE in the repo root with the Clerk live keys first."; exit 1; }
 
-vercel link --yes --project "$PROJECT" --scope "$SCOPE" >/dev/null
+"${VERCEL[@]}" link --yes --project "$PROJECT" --scope "$SCOPE" >/dev/null
 
 for key in "${KEYS[@]}"; do
   value=$(grep -E "^${key}=" "$FILE" | head -1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//')
@@ -29,6 +32,6 @@ for key in "${KEYS[@]}"; do
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:pk_live_*|CLERK_SECRET_KEY:sk_live_*) ;;
     *) echo "$key is not a live key (expected pk_live_ or sk_live_)"; exit 1 ;;
   esac
-  printf '%s' "$value" | vercel env add "$key" production --scope "$SCOPE" >/dev/null
+  printf '%s' "$value" | "${VERCEL[@]}" env add "$key" production --scope "$SCOPE" >/dev/null
   echo "Added $key for Production"
 done

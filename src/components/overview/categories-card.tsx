@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { krNoDecimals } from '@/lib/format'
+import { krw } from '@/lib/format'
 import { BUCKET_LABELS, CATEGORIES, type Bucket } from '@/lib/months'
 import { usePrefersReducedMotion } from '@/components/motion/rolling-digits'
 
@@ -68,7 +68,7 @@ export function CategoriesCard({ rows }: { rows: CategoryRow[] }) {
                 <div className="mb-1.5 flex items-baseline justify-between gap-3 text-sm">
                   <span className="truncate font-medium text-[var(--text)]">{g.label}</span>
                   <span className="shrink-0 tabular-nums">
-                    <b className="font-semibold text-[var(--text)]">{krNoDecimals(g.total)} kr</b>
+                    <b className="font-semibold text-[var(--text)]">{krw(g.total)}</b>
                     <span className="ml-2 inline-block w-[2.6em] text-right text-[0.8125rem] text-[var(--muted-foreground)]">
                       {share(g.total)}%
                     </span>
@@ -79,7 +79,7 @@ export function CategoriesCard({ rows }: { rows: CategoryRow[] }) {
                   className="flex h-2 overflow-hidden rounded-full bg-[var(--p-04)]"
                   role="img"
                   aria-label={BUCKETS.filter((b) => g.parts[b] > 0)
-                    .map((b) => `${krNoDecimals(g.parts[b])} kr ${b}`)
+                    .map((b) => `${krw(g.parts[b])} ${b}`)
                     .join(', ')}
                 >
                   <div

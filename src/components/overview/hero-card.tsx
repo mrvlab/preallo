@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { krw } from '@/lib/format'
-import { daysLeftInPeriod, daysUntilStart, periodDays, periodOf, periodRange, shortDate } from '@/lib/months'
+import { daysLeftInPeriod, daysUntilStart, periodDays, periodRange } from '@/lib/months'
 import { useMonth } from '@/components/month-context'
 import { RollingDigits } from '@/components/motion/rolling-digits'
 import { useModals } from '@/components/modals/modals-provider'
@@ -29,7 +29,6 @@ export function HeroCard({ monthKey, free, income, reserved, missingCount, paid,
   const past = monthKey < todayKey
   const future = monthKey > todayKey
   const range = periodRange(monthKey, payday)
-  const nextPayday = shortDate(new Date(periodOf(monthKey, payday).end.getTime() + 86_400_000))
   const daysLeft = daysLeftInPeriod(monthKey, payday)
   const startsIn = daysUntilStart(monthKey, payday)
   // A running budget divides by the weeks left until payday; others by their full length.
@@ -53,8 +52,8 @@ export function HeroCard({ monthKey, free, income, reserved, missingCount, paid,
           ? `a week, over the ${plural(weeks, 'week')} of ${range}`
           : `for ${range}. Starts on payday${startsIn > 0 ? `, in ${plural(startsIn, 'day')}` : ''}`
         : view === 'week'
-          ? `a week, for the ${plural(weeks, 'week')} until payday`
-          : `until payday on ${nextPayday}, ${plural(daysLeft, 'day')} left`
+          ? `a week, for the next ${plural(weeks, 'week')}`
+          : `for the next ${plural(daysLeft, 'day')}`
 
   return (
     <section className="flex flex-col items-center rounded-[var(--radius-4)] bg-[var(--hero-bg)] px-7 pt-9 pb-6 text-center">

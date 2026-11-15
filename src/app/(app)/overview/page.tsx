@@ -11,8 +11,19 @@ import { OverviewSkeleton } from '@/components/overview/overview-skeleton'
 import { MonthHeader } from '@/components/month-header'
 import { useMonth } from '@/components/month-context'
 import { type Bucket } from '@/lib/months'
+import type { Id } from '../../../../convex/_generated/dataModel'
 
 const BUCKETS: Bucket[] = ['needs', 'wants', 'savings']
+
+type Imported = { _id: Id<'transactions'>; date: string; description: string; amount: number; category?: string }
+
+// Imported rows matched to a bank payment carry its real date; unmatched ones keep the sheet's
+// placeholder, the 1st of the month, so only the matched ones are listed. All of them are paid.
+function paidFromHistory(rows: Imported[], key: string) {
+  return rows
+    .filter((r) => r.amount < 0 && r.category !== 'salary' && r.date !== `${key}-01`)
+    .map((r) => ({ _id: r._id, name: r.description, amount: -r.amount, date: r.date, paid: true, locked: false }))
+}
 
 export default function OverviewPage() {
   const { monthKey: key, ready } = useMonth()
@@ -75,7 +86,11 @@ export default function OverviewPage() {
                 <GoalsRingCard pct={summary.pct} goals={summary.goals} />
               </div>
               <div className="order-4 @min-[60rem]/main:order-none">
-                <ComingUp items={items} monthKey={key} />
+                {summary.fromHistory ? (
+                  <ComingUp items={paidFromHistory(imported ?? [], key)} monthKey={key} readOnly />
+                ) : (
+                  <ComingUp items={items} monthKey={key} />
+                )}
               </div>
               <div className="order-5 @min-[60rem]/main:order-none">
                 <CategoriesCard rows={summary.fromHistory ? (imported ?? []) : items} />

@@ -4,29 +4,42 @@ import { Lock } from 'lucide-react'
 import Link from 'next/link'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { krw } from '@/lib/format'
-import { dayLabel, dueDate } from '@/lib/months'
+import { dateLabel, dueDate } from '@/lib/months'
 import { useMonth } from '@/components/month-context'
 import { RollingDigits } from '@/components/motion/rolling-digits'
 import { useModals } from '@/components/modals/modals-provider'
 import { cn } from '@/lib/utils'
 
 type Item = {
-  _id: Id<'items'>
+  _id: Id<'items'> | Id<'transactions'>
   name: string
   amount?: number
   due?: number
   paid: boolean
   locked: boolean
   group?: string
+  // Imported months carry the real payment date instead of a due day.
+  date?: string
 }
 
 const SHOWN = 7
 
-export function ComingUp({ items, monthKey }: { items: Item[]; monthKey: string }) {
+export function ComingUp({
+  items,
+  monthKey,
+  readOnly,
+}: {
+  items: Item[]
+  monthKey: string
+  readOnly?: boolean
+}) {
   const { openItem } = useModals()
   const { payday, todayKey } = useMonth()
-  const when = (i: Item) => dueDate(monthKey, i.due!, payday).getTime()
-  const dated = items.filter((i) => i.due && (i.amount ?? 0) > 0).sort((a, b) => when(a) - when(b))
+  const on = (i: Item) => (i.date ? new Date(`${i.date}T00:00`) : dueDate(monthKey, i.due!, payday))
+  const when = (i: Item) => on(i).getTime()
+  const dated = items
+    .filter((i) => (i.due || i.date) && (i.amount ?? 0) > 0)
+    .sort((a, b) => when(a) - when(b))
   const pending = dated.filter((i) => !i.paid).reduce((a, i) => a + (i.amount ?? 0), 0)
   const now = new Date()
   // Ended budgets are entirely behind "today"; upcoming ones entirely ahead of it.
@@ -65,9 +78,10 @@ export function ComingUp({ items, monthKey }: { items: Item[]; monthKey: string 
               <div key={i._id}>
                 {idx === markerAt && idx !== 0 && <TodayMarker />}
                 <button
-                  onClick={() => openItem({ id: i._id })}
+                  onClick={() => openItem({ id: i._id as Id<'items'> })}
+                  disabled={readOnly}
                   className={cn(
-                    'relative grid w-full grid-cols-[6rem_1fr_auto] items-baseline gap-3 rounded-[var(--radius-2)] py-[0.5625rem] pr-1.5 text-left text-sm transition-colors duration-[120ms] hover:bg-[var(--p-06)]',
+                    'relative grid w-full grid-cols-[6rem_1fr_auto] items-baseline gap-3 rounded-[var(--radius-2)] py-[0.5625rem] pr-1.5 text-left text-sm transition-colors duration-[120ms] hover:bg-[var(--p-06)] disabled:cursor-default disabled:hover:bg-transparent',
                     i.paid && 'text-[var(--muted-foreground)]',
                   )}
                 >
@@ -89,7 +103,7 @@ export function ComingUp({ items, monthKey }: { items: Item[]; monthKey: string 
                       isNow ? 'text-[var(--brand-primary)]' : 'text-[var(--muted-foreground)]',
                     )}
                   >
-                    {dayLabel(monthKey, i.due!, payday)}
+                    {dateLabel(on(i))}
                   </span>
                   <span
                     className={cn(

@@ -6,6 +6,7 @@ import { HeroCard } from '@/components/overview/hero-card'
 import { BucketCard } from '@/components/overview/bucket-card'
 import { GoalsRingCard } from '@/components/overview/goals-ring-card'
 import { ComingUp } from '@/components/overview/coming-up'
+import { CategoriesCard } from '@/components/overview/categories-card'
 import { OverviewSkeleton } from '@/components/overview/overview-skeleton'
 import { MonthHeader } from '@/components/month-header'
 import { useMonth } from '@/components/month-context'
@@ -21,6 +22,8 @@ export default function OverviewPage() {
   const wants = useQuery(api.months.bucketHistory, { key, bucket: 'wants', months: 3 })
   const savings = useQuery(api.months.bucketHistory, { key, bucket: 'savings', months: 3 })
   const history = { needs, wants, savings }
+  // Imported months have no items; their categories come from the imported rows instead.
+  const imported = useQuery(api.transactions.listForMonth, summary?.fromHistory ? { monthKey: key } : 'skip')
 
   const loading = !ready || summary === undefined || items === undefined
 
@@ -73,6 +76,9 @@ export default function OverviewPage() {
               </div>
               <div className="order-4 @min-[60rem]/main:order-none">
                 <ComingUp items={items} monthKey={key} />
+              </div>
+              <div className="order-5 @min-[60rem]/main:order-none">
+                <CategoriesCard rows={summary.fromHistory ? (imported ?? []) : items} />
               </div>
             </div>
           </div>

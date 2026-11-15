@@ -65,9 +65,10 @@ export function GoalsRings({ size = 170, pct, goals }: Props) {
           const R = radii[k]
           const Cc = 2 * Math.PI * R
           const used = goals[k] > 0 ? pct[k] / goals[k] : 0
-          const fill =
-            k === 'savings' ? Math.min(1, used) : Math.max(0, 1 - used)
           const lap = k === 'savings' ? 0 : Math.max(0, Math.min(1, used - 1))
+          // Needs and wants drain as the budget is used. Once over goal the ring is full again in
+          // its own colour, and the amount over draws on top of it in a darker shade of that colour.
+          const fill = k === 'savings' ? Math.min(1, used) : used > 1 ? 1 : Math.max(0, 1 - used)
           const main = fill * Cc
           const lapLen = lap * Cc
           return (
@@ -101,7 +102,7 @@ export function GoalsRings({ size = 170, pct, goals }: Props) {
                   cy={CX}
                   r={R}
                   fill="none"
-                  stroke={`var(--${k})`}
+                  stroke={`var(--${k}-over)`}
                   strokeWidth={SW}
                   strokeLinecap="round"
                   strokeDasharray={`${playing ? lapLen : 0} ${Cc}`}

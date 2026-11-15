@@ -75,4 +75,23 @@ export default defineSchema({
     .index('byUserMonth', ['userId', 'monthKey'])
     .index('byUserReview', ['userId', 'needsReview']),
 
+  // Raw rows from bank and card exports (Nordea, Resurs, Klarna), kept apart from the plan so
+  // they never count towards a month's totals. `key` makes a re-import of an overlapping file a
+  // no-op. `declined` rows (Klarna "Purchase power too low") were never charged.
+  bankTransactions: defineTable({
+    userId: v.id('users'),
+    bank: v.string(),
+    date: v.string(),
+    amount: v.number(),
+    text: v.string(),
+    kind: v.optional(v.string()),
+    balance: v.optional(v.number()),
+    interest: v.optional(v.number()),
+    declined: v.optional(v.boolean()),
+    note: v.optional(v.string()),
+    currency: v.string(),
+    key: v.string(),
+  })
+    .index('byUserDate', ['userId', 'date'])
+    .index('byUserKey', ['userId', 'key']),
 })

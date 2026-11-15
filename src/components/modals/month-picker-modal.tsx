@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Modal } from '@/components/ui/modal'
 import { isEditable, monthName } from '@/lib/months'
 import { cn } from '@/lib/utils'
+import { useMonth } from '@/components/month-context'
 
 const SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec']
 
@@ -23,6 +24,7 @@ export function MonthPickerModal({
   onStart: (key: string) => void
   onClose: () => void
 }) {
+  const { todayKey } = useMonth()
   const [year, setYear] = useState(Number(monthKey.slice(0, 4)))
 
   useEffect(() => {
@@ -53,7 +55,7 @@ export function MonthPickerModal({
           const on = key === monthKey
           const has = existing.has(key)
           // An empty month older than last month would be locked as soon as it was made.
-          const closed = !has && !isEditable(key)
+          const closed = !has && !isEditable(key, todayKey)
           return (
             <button
               key={key}

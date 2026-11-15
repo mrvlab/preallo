@@ -4,7 +4,8 @@ import { Lock } from 'lucide-react'
 import Link from 'next/link'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { krw } from '@/lib/format'
-import { currentMonthKey, dayLabel } from '@/lib/months'
+import { dayLabel, dueDate } from '@/lib/months'
+import { useMonth } from '@/components/month-context'
 import { RollingDigits } from '@/components/motion/rolling-digits'
 import { useModals } from '@/components/modals/modals-provider'
 import { cn } from '@/lib/utils'
@@ -23,15 +24,20 @@ const SHOWN = 7
 
 export function ComingUp({ items, monthKey }: { items: Item[]; monthKey: string }) {
   const { openItem } = useModals()
-  const dated = items
-    .filter((i) => i.due && (i.amount ?? 0) > 0)
-    .sort((a, b) => (a.due ?? 0) - (b.due ?? 0))
+  const { payday, todayKey } = useMonth()
+  const when = (i: Item) => dueDate(monthKey, i.due!, payday).getTime()
+  const dated = items.filter((i) => i.due && (i.amount ?? 0) > 0).sort((a, b) => when(a) - when(b))
   const pending = dated.filter((i) => !i.paid).reduce((a, i) => a + (i.amount ?? 0), 0)
-  const thisMonth = currentMonthKey()
-  // Past months are entirely behind "today"; future months entirely ahead of it.
-  const today = monthKey < thisMonth ? 99 : monthKey > thisMonth ? 0 : new Date().getDate()
+  const now = new Date()
+  // Ended budgets are entirely behind "today"; upcoming ones entirely ahead of it.
+  const today =
+    monthKey < todayKey
+      ? Infinity
+      : monthKey > todayKey
+        ? -Infinity
+        : new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
   const shown = dated.slice(0, SHOWN)
-  const firstUpcoming = shown.findIndex((i) => (i.due ?? 0) >= today)
+  const firstUpcoming = shown.findIndex((i) => when(i) >= today)
   const markerAt = firstUpcoming === -1 ? shown.length : firstUpcoming
 
   return (
@@ -53,15 +59,15 @@ export function ComingUp({ items, monthKey }: { items: Item[]; monthKey: string 
       ) : (
         <div className="relative pl-5 before:absolute before:top-3.5 before:bottom-3.5 before:left-1 before:w-0.5 before:rounded-sm before:bg-[var(--p-06)]">
           {shown.map((i, idx) => {
-            const isNow = !i.paid && i.due === today
-            const past = !i.paid && (i.due ?? 0) < today
+            const isNow = !i.paid && when(i) === today
+            const past = !i.paid && when(i) < today
             return (
               <div key={i._id}>
                 {idx === markerAt && idx !== 0 && <TodayMarker />}
                 <button
                   onClick={() => openItem({ id: i._id })}
                   className={cn(
-                    'relative grid w-full grid-cols-[4.75rem_1fr_auto] items-baseline gap-3 rounded-[var(--radius-2)] py-[0.5625rem] pr-1.5 text-left text-sm transition-colors duration-[120ms] hover:bg-[var(--p-06)]',
+                    'relative grid w-full grid-cols-[6rem_1fr_auto] items-baseline gap-3 rounded-[var(--radius-2)] py-[0.5625rem] pr-1.5 text-left text-sm transition-colors duration-[120ms] hover:bg-[var(--p-06)]',
                     i.paid && 'text-[var(--muted-foreground)]',
                   )}
                 >
@@ -83,7 +89,7 @@ export function ComingUp({ items, monthKey }: { items: Item[]; monthKey: string 
                       isNow ? 'text-[var(--brand-primary)]' : 'text-[var(--muted-foreground)]',
                     )}
                   >
-                    {dayLabel(monthKey, i.due!)}
+                    {dayLabel(monthKey, i.due!, payday)}
                   </span>
                   <span
                     className={cn(
@@ -104,7 +110,7 @@ export function ComingUp({ items, monthKey }: { items: Item[]; monthKey: string 
               </div>
             )
           })}
-          {markerAt === shown.length && today !== 99 && <TodayMarker end />}
+          {markerAt === shown.length && today !== Infinity && <TodayMarker end />}
         </div>
       )}
 

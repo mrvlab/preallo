@@ -61,11 +61,15 @@ const HOW: Array<[string, ReactNode]> = [
     'What is "Left to spend"?',
     <>
       <p>
-        Salary after tax, minus needs, savings and fixed wants. It is also your room for error: spend it to zero and
-        the next surprise lands on the card. For a finished month it becomes Left over, salary minus everything spent.
+        Salary after tax, minus every row you planned: needs, wants and savings. It is also your room for error:
+        spend it to zero and the next surprise lands on the card. For a finished month it becomes Left over.
       </p>
       <p>
-        The Week toggle divides it by the weeks left in the month. There is no daily number on purpose, and from day
+        A month runs from payday to the day before the next payday. With payday on the 25th, November is 25 Nov to 24
+        Dec and pays the bills marked November. Change the day in Settings.
+      </p>
+      <p>
+        The Week toggle divides it by the weeks left until payday. There is no daily number on purpose, and from day
         three the month figure is rounded to the nearest hundred.
       </p>
       <Src>
@@ -84,7 +88,8 @@ const HOW: Array<[string, ReactNode]> = [
         </li>
         <li>
           <b>Needs and wants drain.</b> Full at payday, shrinking as you plan. The ring shows room left, not money
-          spent. At the limit it is empty. Past it, a darker lap in the same colour shows how far over.
+          spent. At the limit it is empty. Past it, the ring fills again and a darker shade of the same colour draws on top to
+          show how far over.
         </li>
       </ul>
       <p>Close the savings ring, keep the other two from lapping. All three on target is the month.</p>

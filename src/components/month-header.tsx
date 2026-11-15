@@ -5,11 +5,11 @@ import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { api } from '../../convex/_generated/api'
 import { useMonth } from '@/components/month-context'
 import { useModals } from '@/components/modals/modals-provider'
-import { monthName, monthYear } from '@/lib/months'
+import { monthName, monthYear, periodRange } from '@/lib/months'
 import { Bone } from '@/components/ui/skeleton-block'
 
 export function MonthHeader() {
-  const { monthKey, ready, setMonthKey } = useMonth()
+  const { monthKey, ready, setMonthKey, payday } = useMonth()
   const { openPicker, startMonth } = useModals()
   const months = useQuery(api.months.listForUser) ?? []
   const keys = months.map((m) => m.key).sort()
@@ -39,6 +39,7 @@ export function MonthHeader() {
                 <span className="text-[1.25rem] font-medium text-[var(--muted-foreground)]">
                   {monthYear(monthKey)}
                 </span>
+                <span className="text-sm text-[var(--muted-foreground)]">{periodRange(monthKey, payday)}</span>
               </>
             ) : (
               <Bone className="my-1.5 h-8 w-52" shade="strong" />
@@ -63,9 +64,13 @@ export function MonthHeader() {
                     {monthName(monthKey)}
                   </span>
                   <span className="ml-2 text-sm font-bold text-[var(--muted-foreground)]">{monthYear(monthKey)}</span>
+                  <span className="block text-xs text-[var(--muted-foreground)]">{periodRange(monthKey, payday)}</span>
                 </>
               ) : (
-                <Bone className="my-1 h-6 w-36" shade="strong" />
+                <>
+                  <Bone className="my-1 h-6 w-36" shade="strong" />
+                  <Bone className="mt-1 h-3 w-24" shade="soft" />
+                </>
               )}
             </button>
           </h1>

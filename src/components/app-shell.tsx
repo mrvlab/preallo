@@ -11,7 +11,7 @@ import { Logo } from '@/components/logo'
 import { MonthProvider, useMonth } from '@/components/month-context'
 import { ModalsProvider, useModals } from '@/components/modals/modals-provider'
 import { ToastProvider } from '@/components/toast'
-import { currentMonthKey, isEditable, monthName, monthYear } from '@/lib/months'
+import { isEditable, monthName, monthYear } from '@/lib/months'
 import { cn } from '@/lib/utils'
 import { Bone } from '@/components/ui/skeleton-block'
 import { AdoptImported } from '@/components/adopt-imported'
@@ -127,10 +127,9 @@ function Shell({ children }: { children: ReactNode }) {
 function MonthsNav() {
   const loaded = useQuery(api.months.listForUser)
   const months = loaded ?? []
-  const { monthKey, ready, setMonthKey } = useMonth()
+  const { monthKey, ready, setMonthKey, todayKey: today } = useMonth()
   const { startMonth } = useModals()
   const [showAll, setShowAll] = useState(false)
-  const today = currentMonthKey()
   const shown = showAll ? months : months.slice(0, 5)
 
   return (

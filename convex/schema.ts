@@ -7,6 +7,8 @@ export default defineSchema({
     email: v.string(),
     name: v.string(),
     defaultSalary: v.optional(v.number()),
+    // Day of the month salary arrives (1 to 28); missing means 25.
+    payday: v.optional(v.number()),
     defaultCurrency: v.string(),
     defaultSplit: v.object({
       needs: v.number(),

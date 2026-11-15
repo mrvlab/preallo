@@ -1,6 +1,7 @@
 import { v } from 'convex/values'
 import { query } from './_generated/server'
 import { getUserFromIdentity } from './users'
+import { lastEditableKey, paydayOf } from './editable'
 
 type Bucket = 'needs' | 'wants' | 'savings'
 type Stats = { median: number; mean: number; p25: number; p75: number; trend: -1 | 0 | 1 }
@@ -32,11 +33,6 @@ function trendOf(values: number[]): -1 | 0 | 1 {
   return Math.abs(slope) < 0.01 ? 0 : slope > 0 ? 1 : -1
 }
 
-function lockedBefore(now = new Date()) {
-  const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1))
-  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`
-}
-
 export const computeActualAverages = query({
   args: { period: v.optional(v.union(v.literal('recent'), v.literal('all'))) },
   handler: async (ctx, { period = 'recent' }) => {
@@ -48,7 +44,7 @@ export const computeActualAverages = query({
       .withIndex('byUserKey', (q) => q.eq('userId', userId))
       .collect()
     // Imported months, plus planned months once they lock, since both are finished.
-    const cutoff = lockedBefore()
+    const cutoff = lastEditableKey(await paydayOf(ctx, userId))
     const finished = all
       .filter((m) => m.income > 0 && (m.imported || m.key < cutoff))
       .sort((a, b) => (a.key < b.key ? -1 : 1))

@@ -108,7 +108,7 @@ function ComingUpSkeleton() {
       </div>
       <div className="relative pl-5 before:absolute before:top-3.5 before:bottom-3.5 before:left-1 before:w-0.5 before:rounded-sm before:bg-[var(--p-06)]">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="relative grid grid-cols-[4.75rem_1fr_auto] items-baseline gap-3 py-[0.5625rem] pr-1.5 text-sm">
+          <div key={i} className="relative grid grid-cols-[6rem_1fr_auto] items-baseline gap-3 py-[0.5625rem] pr-1.5 text-sm">
             <Bone className="absolute top-3.5 -left-[1.3rem] size-2.5" shade="mid" round />
             <TextBone className="text-[0.8125rem] font-medium" w="3.5em" shade="soft" />
             <TextBone className="font-medium" w={['6em', '8em', '5em', '7em'][i]} shade="mid" />

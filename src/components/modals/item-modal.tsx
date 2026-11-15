@@ -16,7 +16,8 @@ import {
   Toggle,
 } from '@/components/ui/modal'
 import { useToast } from '@/components/toast'
-import { BUCKET_LABELS, CATEGORIES, dayLabel, daysInMonth, type Bucket } from '@/lib/months'
+import { BUCKET_LABELS, CATEGORIES, dayLabel, dueDate, isoDate, periodOf, type Bucket } from '@/lib/months'
+import { useMonth } from '@/components/month-context'
 import { cn } from '@/lib/utils'
 
 export type ItemTarget = { id: Id<'items'> } | { bucket: Bucket }
@@ -40,6 +41,7 @@ export function ItemModal({
   const update = useMutation(api.items.update)
   const remove = useMutation(api.items.remove)
   const toast = useToast()
+  const { payday } = useMonth()
 
   const item = target && 'id' in target ? items?.find((i) => i._id === target.id) : undefined
   const bucket = (item?.bucket ?? (target && 'bucket' in target ? target.bucket : 'needs')) as Bucket
@@ -65,7 +67,7 @@ export function ItemModal({
     setName(item?.name ?? '')
     setAmount(item?.amount != null ? String(item.amount) : '')
     setCategory(item?.category && CATEGORIES.includes(item.category) ? item.category : 'Other')
-    setDue(item?.due ? `${monthKey}-${String(item.due).padStart(2, '0')}` : '')
+    setDue(item?.due ? isoDate(dueDate(monthKey, item.due, payday)) : '')
     setLocked(item?.locked ?? false)
     setGroup(item?.group ?? '')
     setAdvOpen(false)
@@ -74,10 +76,10 @@ export function ItemModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, open])
 
-  const dim = daysInMonth(monthKey)
+  const period = periodOf(monthKey, payday)
   const dueDay = due ? Number(due.slice(8, 10)) : null
   const advSummary = item
-    ? [dueDay ? dayLabel(monthKey, dueDay) : '', locked ? 'fixed' : '', group].filter(Boolean).join(' · ')
+    ? [dueDay ? dayLabel(monthKey, dueDay, payday) : '', locked ? 'fixed' : '', group].filter(Boolean).join(' · ')
     : ''
 
   async function save() {
@@ -206,8 +208,8 @@ export function ItemModal({
                 <TextInput
                   type="date"
                   value={due}
-                  min={`${monthKey}-01`}
-                  max={`${monthKey}-${String(dim).padStart(2, '0')}`}
+                  min={isoDate(period.start)}
+                  max={isoDate(period.end)}
                   onChange={(e) => setDue(e.target.value)}
                 />
               </Field>

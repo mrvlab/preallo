@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { krw } from '@/lib/format'
-import { currentMonthKey, daysInMonth, isEditable, monthName } from '@/lib/months'
+import { daysLeftInPeriod, daysUntilStart, periodDays, periodRange } from '@/lib/months'
+import { useMonth } from '@/components/month-context'
 import { RollingDigits } from '@/components/motion/rolling-digits'
 import { useModals } from '@/components/modals/modals-provider'
 import { cn } from '@/lib/utils'
@@ -24,32 +25,35 @@ const softBand = (v: number) => Math.round(v / 100) * 100
 export function HeroCard({ monthKey, free, income, reserved, missingCount, paid, payable }: Props) {
   const [view, setView] = useState<'month' | 'week'>('month')
   const { openIncome } = useModals()
-  const today = currentMonthKey()
-  const past = monthKey < today
-  const future = monthKey > today
-  const dim = daysInMonth(monthKey)
-  const dayOfMonth = new Date().getDate()
-  const daysLeft = Math.max(0, dim - dayOfMonth)
-  const weeks = past ? Math.max(1, Math.round(dim / 7)) : Math.max(1, Math.ceil(daysLeft / 7))
+  const { todayKey, payday, editable } = useMonth()
+  const past = monthKey < todayKey
+  const future = monthKey > todayKey
+  const range = periodRange(monthKey, payday)
+  const daysLeft = daysLeftInPeriod(monthKey, payday)
+  const startsIn = daysUntilStart(monthKey, payday)
+  // A running budget divides by the weeks left until payday; others by their full length.
+  const weeks = Math.max(1, past || future ? Math.round(periodDays(monthKey, payday) / 7) : Math.ceil(daysLeft / 7))
+  const dayInPeriod = periodDays(monthKey, payday) - daysLeft + 1
   const neg = free < 0
   // Exact early in the cycle or while the plan is incomplete; softened to the nearest 100 otherwise.
-  const exact = past || future || dayOfMonth <= 2 || missingCount > 0 || neg
+  const exact = past || future || dayInPeriod <= 2 || missingCount > 0 || neg
   const value = view === 'week' ? free / weeks : exact ? free : softBand(free)
-  const name = monthName(monthKey)
-  const editable = isEditable(monthKey)
+  const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`
 
   const eyebrow = past ? 'Left over' : 'Left to spend'
   const sub = neg
     ? 'Your plan needs more than your salary'
     : past
       ? view === 'week'
-        ? `a week, ${name} had ${weeks} weeks`
-        : `${name} has ended`
+        ? `a week, over the ${plural(weeks, 'week')} of ${range}`
+        : `${range}, now ended`
       : future
-        ? `for ${name}, not started yet`
+        ? view === 'week'
+          ? `a week, over the ${plural(weeks, 'week')} of ${range}`
+          : `for ${range}. Starts on payday${startsIn > 0 ? `, in ${plural(startsIn, 'day')}` : ''}`
         : view === 'week'
-          ? `a week, for the next ${weeks} ${weeks === 1 ? 'week' : 'weeks'}`
-          : `for the next ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'}`
+          ? `a week, for the next ${plural(weeks, 'week')}`
+          : `for the next ${plural(daysLeft, 'day')}`
 
   return (
     <section className="flex flex-col items-center rounded-[var(--radius-4)] bg-[var(--hero-bg)] px-7 pt-9 pb-6 text-center">
@@ -90,7 +94,7 @@ export function HeroCard({ monthKey, free, income, reserved, missingCount, paid,
           <Value underline={editable}>{krw(income)}</Value>
         </button>
         <div className="min-w-0">
-          <Label>{past ? 'Spent' : 'Reserved'}</Label>
+          <Label>{past ? 'Spent' : 'Planned'}</Label>
           <Value>{krw(reserved)}</Value>
         </div>
         {missingCount > 0 ? (

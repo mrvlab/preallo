@@ -99,9 +99,13 @@
   --needs: #d9912a;
   --needs-soft: rgba(217, 145, 42, 0.12);
   --needs-ink: #8a5a1c;
+  /* Over-goal lap on the goal rings: the same hue as the ring, clearly darker. Defined once,
+     so it follows each theme's base colour. */
+  --needs-over: color-mix(in oklab, var(--needs) 62%, black);
   --wants: #de5a50;
   --wants-soft: rgba(222, 90, 80, 0.12);
   --wants-ink: #9a3a33;
+  --wants-over: color-mix(in oklab, var(--wants) 62%, black);
   --savings: #2fa574;
   --savings-soft: rgba(47, 165, 116, 0.12);
   --savings-ink: #1f7a55;

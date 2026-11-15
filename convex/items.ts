@@ -51,7 +51,7 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const userId = await getUserFromIdentity(ctx)
     if (!userId) throw new Error('Not authenticated')
-    assertEditable(args.monthKey)
+    await assertEditable(ctx, userId, args.monthKey)
     return await ctx.db.insert('items', {
       userId,
       monthKey: args.monthKey,
@@ -88,7 +88,7 @@ export const update = mutation({
     if (!userId) throw new Error('Not authenticated')
     const row = await ctx.db.get(id)
     if (!row || row.userId !== userId) throw new Error('Not found')
-    assertEditable(row.monthKey)
+    await assertEditable(ctx, userId, row.monthKey)
     const clean = Object.fromEntries(
       Object.entries(patch).map(([k, val]) => [k, val === null ? undefined : val]),
     )
@@ -105,7 +105,7 @@ export const togglePaid = mutation({
     if (!userId) throw new Error('Not authenticated')
     const row = await ctx.db.get(id)
     if (!row || row.userId !== userId) throw new Error('Not found')
-    assertEditable(row.monthKey)
+    await assertEditable(ctx, userId, row.monthKey)
     await ctx.db.patch(id, {
       paid: !row.paid,
       paidAt: row.paid ? undefined : Date.now(),
@@ -122,7 +122,7 @@ export const remove = mutation({
     if (!userId) throw new Error('Not authenticated')
     const row = await ctx.db.get(id)
     if (!row || row.userId !== userId) throw new Error('Not found')
-    assertEditable(row.monthKey)
+    await assertEditable(ctx, userId, row.monthKey)
     await ctx.db.delete(id)
     return null
   },

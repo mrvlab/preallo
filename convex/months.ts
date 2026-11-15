@@ -82,16 +82,11 @@ export const summary = query({
       }
     }
 
-    const fixedWants = r2(
-      items
-        .filter((i) => i.bucket === 'wants' && i.category === 'Subscriptions')
-        .reduce((a, i) => a + (i.amount ?? 0), 0),
-    )
-    const flex = r2(totals.wants - fixedWants)
     const income = month.income || 0
-    const reserved = r2(totals.needs + totals.savings + fixedWants)
-    const free = r2(income - reserved)
-    const left = r2(income - totals.needs - totals.wants - totals.savings)
+    // Every planned row is spoken for, like the Total in the old budget sheets: Klarna and
+    // other Wants count as much as rent does.
+    const reserved = r2(totals.needs + totals.wants + totals.savings)
+    const left = r2(income - reserved)
     const goals = month.goals
     const goalAmt: Record<Bucket, number> = {
       needs: r2((income * goals.needs) / 100),
@@ -119,10 +114,7 @@ export const summary = query({
       missing,
       totals,
       income,
-      fixedWants,
-      flex,
       reserved,
-      free,
       left,
       goals,
       goalAmt,
@@ -221,7 +213,7 @@ export const startMonth = mutation({
   handler: async (ctx, { key, income, sourceKey, itemIds, keepAmounts }) => {
     const userId = await getUserFromIdentity(ctx)
     if (!userId) throw new Error('Not authenticated')
-    assertEditable(key)
+    await assertEditable(ctx, userId, key)
     const existing = await ctx.db
       .query('months')
       .withIndex('byUserKey', (q) => q.eq('userId', userId).eq('key', key))
@@ -263,7 +255,7 @@ export const updateIncome = mutation({
   handler: async (ctx, { key, income }) => {
     const userId = await getUserFromIdentity(ctx)
     if (!userId) throw new Error('Not authenticated')
-    assertEditable(key)
+    await assertEditable(ctx, userId, key)
     const month = await ctx.db
       .query('months')
       .withIndex('byUserKey', (q) => q.eq('userId', userId).eq('key', key))
@@ -287,7 +279,7 @@ export const updateGoals = mutation({
   handler: async (ctx, { key, goals }) => {
     const userId = await getUserFromIdentity(ctx)
     if (!userId) throw new Error('Not authenticated')
-    assertEditable(key)
+    await assertEditable(ctx, userId, key)
     const month = await ctx.db
       .query('months')
       .withIndex('byUserKey', (q) => q.eq('userId', userId).eq('key', key))
@@ -304,7 +296,7 @@ export const resetMonth = mutation({
   handler: async (ctx, { key }) => {
     const userId = await getUserFromIdentity(ctx)
     if (!userId) throw new Error('Not authenticated')
-    assertEditable(key)
+    await assertEditable(ctx, userId, key)
     const items = await ctx.db
       .query('items')
       .withIndex('byUserMonth', (q) =>
@@ -324,7 +316,7 @@ export const adoptImported = mutation({
   handler: async (ctx, { key }) => {
     const userId = await getUserFromIdentity(ctx)
     if (!userId) throw new Error('Not authenticated')
-    assertEditable(key)
+    await assertEditable(ctx, userId, key)
     const month = await ctx.db
       .query('months')
       .withIndex('byUserKey', (q) => q.eq('userId', userId).eq('key', key))

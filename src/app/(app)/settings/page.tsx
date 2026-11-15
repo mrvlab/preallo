@@ -14,7 +14,7 @@ import { RollingDigits } from '@/components/motion/rolling-digits'
 import { Bone } from '@/components/ui/skeleton-block'
 import { inputClass, SelectInput } from '@/components/ui/modal'
 import { krNoDecimals } from '@/lib/format'
-import { monthName } from '@/lib/months'
+import { DEFAULT_PAYDAY, monthName, periodRange } from '@/lib/months'
 import { cn } from '@/lib/utils'
 
 type Split = { needs: number; wants: number; savings: number }
@@ -63,6 +63,7 @@ export default function SettingsPage() {
               bigSuffix="kr"
               sub="After tax. Prefilled when you start a month."
             />
+            <PaydayCard payday={me.payday ?? DEFAULT_PAYDAY} monthKey={key} />
             <section className={cn(card, 'grid grid-cols-[1fr_auto] items-center gap-4')}>
               <CardText label="Currency" big="SEK" sub="Swedish krona" />
               <SelectInput aria-label="Currency" wrapperClassName="w-24" defaultValue="SEK">
@@ -87,6 +88,38 @@ export default function SettingsPage() {
         </div>
       )}
     </div>
+  )
+}
+
+const ordinal = (n: number) =>
+  `${n}${n % 10 === 1 && n !== 11 ? 'st' : n % 10 === 2 && n !== 12 ? 'nd' : n % 10 === 3 && n !== 13 ? 'rd' : 'th'}`
+
+function PaydayCard({ payday, monthKey }: { payday: number; monthKey: string }) {
+  const update = useMutation(api.users.updatePayday)
+  const toast = useToast()
+  return (
+    <section className={cn(card, 'grid grid-cols-[1fr_auto] items-center gap-4')}>
+      <CardText
+        label="Payday"
+        big={`The ${ordinal(payday)}`}
+        sub={`Each month's budget runs from payday to the day before the next one, so ${monthName(monthKey)} is ${periodRange(monthKey, payday)}.`}
+      />
+      <SelectInput
+        aria-label="Payday"
+        wrapperClassName="w-24"
+        value={payday}
+        onChange={async (e) => {
+          await update({ day: Number(e.target.value) })
+          toast('Payday saved')
+        }}
+      >
+        {Array.from({ length: 28 }, (_, i) => i + 1).map((d) => (
+          <option key={d} value={d}>
+            {d}
+          </option>
+        ))}
+      </SelectInput>
+    </section>
   )
 }
 
@@ -339,7 +372,7 @@ function SettingsSkeleton() {
   return (
     <div aria-busy="true" aria-label="Loading settings" className="grid items-start gap-5 @min-[60rem]/main:grid-cols-[672fr_486fr]">
       <div className="flex flex-col gap-5">
-        {[0, 1, 2, 3].map((i) => (
+        {[0, 1, 2, 3, 4].map((i) => (
           <div key={i} className={cn(card, 'flex flex-col gap-2.5', i === 1 && 'min-h-[18rem]')}>
             <Bone className="h-3.5 w-28" shade="soft" />
             <Bone className="h-[1.875rem] w-40" shade="strong" />

@@ -69,7 +69,8 @@ const HOW: Array<[string, ReactNode]> = [
         Dec and pays the bills marked November. Change the day in Settings.
       </p>
       <p>
-        The Week toggle divides it by the weeks left until payday. There is no daily number on purpose, and from day
+        The Week toggle turns it into a weekly amount over the exact days left until payday, so a 31-day month
+        gives less a week than a 28-day one. There is no daily number on purpose, and from day
         three the month figure is rounded to the nearest hundred.
       </p>
       <Src>

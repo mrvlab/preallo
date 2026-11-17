@@ -24,7 +24,8 @@ export function SideBox({ bucket, paidCount, itemCount, planned, goalAmount, goa
   const scale = Math.max(goalAmount, planned, 1) * 1.25
   const fill = Math.min(100, (planned / scale) * 100)
   const tick = Math.min(100, (goalAmount / scale) * 100)
-  const diff = planned - goalAmount
+  // In whole öre: a sum of amounts like 8 612,07 carries float dust that would read as over.
+  const diff = Math.round((planned - goalAmount) * 100) / 100
   const status =
     bucket === 'savings'
       ? diff >= 0
@@ -36,7 +37,7 @@ export function SideBox({ bucket, paidCount, itemCount, planned, goalAmount, goa
 
   return (
     <aside
-      className="sticky top-2 rounded-[var(--radius-4)] p-4"
+      className="rounded-[var(--radius-4)] p-4"
       style={{ background: `var(--${bucket}-soft)` }}
     >
       <div className="text-[0.6875rem] font-bold tracking-[0.07em] text-[var(--muted-foreground)] uppercase">Paid</div>

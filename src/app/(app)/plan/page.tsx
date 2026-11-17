@@ -7,6 +7,7 @@ import { api } from '../../../../convex/_generated/api'
 import { BucketChip } from '@/components/plan/bucket-chip'
 import { TodoRow } from '@/components/plan/todo-row'
 import { SideBox } from '@/components/plan/side-box'
+import { RingBox } from '@/components/plan/ring-box'
 import { MonthHeader } from '@/components/month-header'
 import { useMonth } from '@/components/month-context'
 import { useModals } from '@/components/modals/modals-provider'
@@ -141,24 +142,37 @@ export default function PlanPage() {
           </div>
 
           {loading || !summary ? (
-            <div className="flex flex-col gap-3 rounded-[var(--radius-4)] p-5 shadow-[inset_0_0_0_1px_var(--line)]">
-              {[0, 1, 2, 3].map((i) => (
-                <div key={i} className="flex justify-between">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-3 rounded-[var(--radius-4)] p-5 shadow-[inset_0_0_0_1px_var(--line)]">
+                {[0, 1, 2, 3].map((i) => (
+                  <div key={i} className="flex justify-between">
+                    <Bone className="h-3 w-16" shade="soft" />
+                    <Bone className="h-3.5 w-14" shade="mid" />
+                  </div>
+                ))}
+              </div>
+              <div className="@container flex items-center gap-5 rounded-[var(--radius-4)] p-4 shadow-[inset_0_0_0_1px_var(--line)]">
+                <Bone round className="size-[7.5rem] shrink-0 @min-[22rem]:size-[10.625rem]" shade="soft" />
+                <div className="flex flex-col gap-2">
+                  <Bone className="h-3 w-20" shade="soft" />
+                  <Bone className="h-7 w-24" shade="mid" />
                   <Bone className="h-3 w-16" shade="soft" />
-                  <Bone className="h-3.5 w-14" shade="mid" />
                 </div>
-              ))}
+              </div>
             </div>
           ) : (
-            <SideBox
-              bucket={active}
-              paidCount={summary.fromHistory ? history.length : activeItems.filter((i) => i.paid).length}
-              itemCount={summary.fromHistory ? history.length : activeItems.length}
-              planned={totals[active]}
-              goalAmount={summary.goalAmt[active]}
-              goalPct={summary.goals[active]}
-              pctOfSalary={summary.pct[active]}
-            />
+            <div className="sticky top-2 flex flex-col gap-4">
+              <SideBox
+                bucket={active}
+                paidCount={summary.fromHistory ? history.length : activeItems.filter((i) => i.paid).length}
+                itemCount={summary.fromHistory ? history.length : activeItems.length}
+                planned={totals[active]}
+                goalAmount={summary.goalAmt[active]}
+                goalPct={summary.goals[active]}
+                pctOfSalary={summary.pct[active]}
+              />
+              <RingBox bucket={active} planned={totals} goal={summary.goalAmt} />
+            </div>
           )}
         </div>
       </div>

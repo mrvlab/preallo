@@ -83,7 +83,7 @@ export default function OverviewPage() {
             </div>
             <div className="contents @min-[60rem]/main:flex @min-[60rem]/main:flex-col @min-[60rem]/main:gap-6">
               <div className="order-2 @min-[60rem]/main:order-none">
-                <GoalsRingCard pct={summary.pct} goals={summary.goals} />
+                <GoalsRingCard planned={summary.totals} goal={summary.goalAmt} />
               </div>
               <div className="order-4 @min-[60rem]/main:order-none">
                 {summary.fromHistory ? (

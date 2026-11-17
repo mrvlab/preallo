@@ -88,9 +88,9 @@ const HOW: Array<[string, ReactNode]> = [
           <b>Savings fills</b> toward its goal and closes at 100%.
         </li>
         <li>
-          <b>Needs and wants drain.</b> Full at payday, shrinking as you plan. The ring shows room left, not money
-          spent. At the limit it is empty. Past it, the ring fills again and a darker shade of the same colour draws on top to
-          show how far over.
+          <b>Needs and wants fill too.</b> Empty at payday, growing as you plan. The ring shows how much of the goal
+          is used. At the limit it is full. Past it, a darker shade of the same colour draws on top to show how far
+          over.
         </li>
       </ul>
       <p>Close the savings ring, keep the other two from lapping. All three on target is the month.</p>

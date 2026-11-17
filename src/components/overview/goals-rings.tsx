@@ -26,9 +26,9 @@ export function GoalsRings({ size = 170, pct, goals }: Props) {
     BUCKETS.map((k) => {
       const used = goals[k] > 0 ? pct[k] / goals[k] : 0
       const lap = k === 'savings' ? 0 : Math.max(0, Math.min(1, used - 1))
-      // Needs and wants drain as the budget is used. Once over goal the ring is full again in
-      // its own colour, and the amount over draws on top of it in a darker shade of that colour.
-      const fill = k === 'savings' ? Math.min(1, used) : used > 1 ? 1 : Math.max(0, 1 - used)
+      // Every ring fills with the share of its goal that is used and is full at the goal. For
+      // needs and wants the amount over draws on top of it in a darker shade of that colour.
+      const fill = Math.max(0, Math.min(1, used))
       return [k, { fill, lap }]
     }),
   ) as Record<keyof Goals, { fill: number; lap: number }>

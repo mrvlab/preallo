@@ -14,7 +14,7 @@ export function GoalsRingCard({ pct, goals }: { pct: Totals; goals: Goals }) {
   const savingsUsed = goals.savings > 0 ? pct.savings / goals.savings : 0;
   const hint =
     savingsUsed < 0.995
-      ? "Close the savings ring. The other two show room left."
+      ? "Close the savings ring. The other two fill as you plan."
       : onTarget === 3
         ? "All three on target."
         : "Needs or Wants is past its goal. Trim it in Plan.";
